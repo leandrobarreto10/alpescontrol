@@ -1,0 +1,32 @@
+[
+    {
+        "nome": "Master",
+        "email": "leandrobarretodp@gmail.com",
+        "senha": "pbkdf2_sha256$200000$2e95364298888ed758bffb042109fc67$432588229a1c05768a963f6994511d5d6dc86882058a621a10f6facef014f6a6",
+        "nivel": "Administrador",
+        "criado_em": "08/05/2026 19:09",
+        "veiculo_frota": "",
+        "veiculos_frota": [],
+        "bases_permitidas": [
+            "TMG BASE SORRISO",
+            "TMG BASE RONDONOPOLIS"
+        ],
+        "pode_lancar_despesa_frota": true
+    },
+    {
+        "nome": "SUPERVISOR SORRISO",
+        "email": "SUPERVISORALPESTMG@GMAIL.COM",
+        "nivel": "Supervisor Base",
+        "veiculo_frota": "SPZ2J11",
+        "veiculos_frota": [
+            "SPZ2J11"
+        ],
+        "bases_permitidas": [
+            "TMG BASE SORRISO"
+        ],
+        "pode_lancar_despesa_frota": true,
+        "senha": "pbkdf2_sha256$200000$1e0d79c6576bbb7b990723e7c3ddb3ce$a93b6f99549b1abab5c45fc07fd185229bbaca4e536f7223c727d671067e0a9d",
+        "status": "Ativo",
+        "criado_em": "19/05/2026 08:47"
+    }
+]

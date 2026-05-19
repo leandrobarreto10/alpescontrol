@@ -1,0 +1,24 @@
+{
+    "empresa": "",
+    "email": "",
+    "telefone": "",
+    "endereco": "",
+    "logo": "",
+    "estoque_minimo_padrao": 1,
+    "alerta_estoque": true,
+    "permitir_negativo": false,
+    "tema": "dark",
+    "cor_principal": "#6157ff",
+    "fonte": "Inter",
+    "ultimo_backup": "19/05/2026 08:25",
+    "backup_automatico_diario": true,
+    "backup_google_drive_ativo": true,
+    "backup_google_drive_pasta": "C:\\Users\\Dell\\OneDrive\\Backups Sistema Alpes",
+    "ultimo_backup_google_drive": "19/05/2026 08:25",
+    "alteracao_pendente_backup": true,
+    "ultima_alteracao": "19/05/2026 08:49",
+    "supervisores_frequencia": {
+        "TMG BASE SORRISO": "",
+        "TMG BASE RONDONOPOLIS": ""
+    }
+}
