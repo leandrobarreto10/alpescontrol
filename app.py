@@ -11,6 +11,7 @@ import zipfile
 import base64
 import mimetypes
 import secrets
+import html
 try:
     from supabase import create_client
 except Exception:
@@ -35,8 +36,12 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Image as RL
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
+try:
+    import plotly.express as px
+except Exception:
+    px = None
 
-st.set_page_config(page_title="Sistema de Almoxarifado", layout="wide")
+st.set_page_config(page_title="Alpes Gestão e Facilities", page_icon="▣", layout="wide")
 
 _streamlit_dataframe = st.dataframe
 
@@ -1056,276 +1061,390 @@ garantir_pasta_imagens_sistema()
 # =========================
 # ESTILO VISUAL
 # =========================
-cor_principal = config.get("cor_principal", "#6157ff")
+cor_principal = "#0B1F3A"
+cor_destaque = "#F97316"
 fonte = config.get("fonte", "Inter")
-tema = config.get("tema", "dark")
-
-if tema == "dark":
-    fundo_app = "#0f172a"
-    fundo_card = "#111827"
-    borda_card = "#273449"
-    texto_app = "#e5e7eb"
-    texto_suave = "#94a3b8"
-else:
-    fundo_app = "#f8fafc"
-    fundo_card = "#ffffff"
-    borda_card = "#e2e8f0"
-    texto_app = "#111827"
-    texto_suave = "#64748b"
+fundo_app = "#F3F4F6"
+fundo_card = "#FFFFFF"
+borda_card = "#E5E7EB"
+texto_app = "#0F172A"
+texto_suave = "#64748B"
 
 st.markdown(f"""
 <style>
+    :root {{
+        --alpes-navy: #0B1F3A;
+        --alpes-orange: #F97316;
+        --alpes-white: #FFFFFF;
+        --alpes-bg: #F3F4F6;
+        --alpes-success: #22C55E;
+        --alpes-danger: #EF4444;
+        --alpes-warning: #FACC15;
+        --alpes-text: #0F172A;
+        --alpes-muted: #64748B;
+        --alpes-border: #E5E7EB;
+        --alpes-shadow: 0 18px 45px rgba(11, 31, 58, .10);
+    }}
     html, body, [class*="css"] {{
-        font-family: '{fonte}', Arial, sans-serif;
+        font-family: '{fonte}', "Segoe UI", Arial, sans-serif;
+        letter-spacing: 0 !important;
     }}
     .stApp {{
-        background: {fundo_app};
+        background:
+            radial-gradient(circle at top left, rgba(249, 115, 22, .10), transparent 28rem),
+            linear-gradient(180deg, #FFFFFF 0%, {fundo_app} 34%, #EEF2F7 100%);
         color: {texto_app};
     }}
-    [data-testid="stSidebar"] {{
-        background: #0b1220;
+    [data-testid="stMainBlockContainer"] {{
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+        max-width: 1440px;
     }}
-    [data-testid="stSidebar"] * {{
-        color: #e5e7eb;
+    #MainMenu,
+    footer,
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"],
+    [data-testid="stStatusWidget"],
+    [data-testid="stDeployButton"],
+    [data-testid="baseButton-header"] {{
+        display: none !important;
+        visibility: hidden !important;
     }}
-    [data-testid="stSidebar"] div[role="radiogroup"] label {{
-        background: linear-gradient(180deg, #263548 0%, #182232 100%);
-        border: 1px solid #3f5168;
-        border-radius: 8px;
-        padding: 10px 12px;
-        margin: 6px 0;
-        transition: .15s ease;
-        box-shadow:
-            0 7px 0 #090f1a,
-            0 14px 24px rgba(0, 0, 0, .34),
-            inset 0 1px 0 rgba(255, 255, 255, .12);
-        transform: translateY(0);
+    header {{
+        background: transparent !important;
+        height: 0 !important;
     }}
-    [data-testid="stSidebar"] div[role="radiogroup"] label:hover {{
-        background: linear-gradient(180deg, #31425a 0%, #1d2a3d 100%);
-        transform: translateY(-1px);
-        box-shadow:
-            0 8px 0 #090f1a,
-            0 18px 30px rgba(0, 0, 0, .38),
-            inset 0 1px 0 rgba(255, 255, 255, .16);
+    h1, h2, h3, h4, h5, h6 {{
+        color: var(--alpes-navy) !important;
+        letter-spacing: 0 !important;
+        font-weight: 800 !important;
     }}
-    [data-testid="stSidebar"] div[role="radiogroup"] label:active {{
-        transform: translateY(5px);
-        box-shadow:
-            0 2px 0 #090f1a,
-            0 8px 16px rgba(0, 0, 0, .32),
-            inset 0 2px 8px rgba(0, 0, 0, .25);
+    h1 {{
+        font-size: 2.35rem !important;
+        line-height: 1.12 !important;
+        margin-bottom: 1.1rem !important;
     }}
-    [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) {{
-        background: linear-gradient(135deg, {cor_principal}, #2563eb);
-        border-color: {cor_principal};
-        box-shadow:
-            0 7px 0 #172554,
-            0 16px 30px rgba(37, 99, 235, .34),
-            inset 0 1px 0 rgba(255, 255, 255, .24);
+    h2, h3 {{
+        margin-top: 1.2rem !important;
     }}
-    [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) * {{
-        color: white !important;
-        font-weight: 700;
-    }}
-    .saas-card {{
-        background: {fundo_card};
-        border: 1px solid {borda_card};
-        border-radius: 14px;
-        padding: 18px;
-        box-shadow: 0 14px 35px rgba(0, 0, 0, .18);
-    }}
-    .metric-card {{
-        background: {fundo_card};
-        border: 1px solid {borda_card};
-        border-radius: 14px;
-        padding: 18px;
-        box-shadow: 0 12px 28px rgba(0, 0, 0, .16);
-        min-height: 112px;
-    }}
-    .metric-label {{
-        color: {texto_suave};
-        font-size: 13px;
-        margin-bottom: 8px;
-    }}
-    .metric-value {{
-        color: {texto_app};
-        font-size: 30px;
-        font-weight: 800;
-    }}
-    .status-pill {{
-        border-radius: 999px;
-        padding: 8px 12px;
-        background: #12201a;
-        border: 1px solid #1f7a45;
-        color: #4ade80;
-        font-weight: 700;
-        display: inline-block;
-        width: 100%;
-        text-align: center;
-    }}
-    .home-img {{
-        width: 100%;
-        height: 100vh;
-        object-fit: cover;
-        object-position: center;
-        border: 0;
-        display: block;
-    }}
-    .home-fullscreen-lock {{
-        position: relative;
-        width: 100%;
-        height: 100vh;
-        min-height: 100vh;
-        overflow: hidden;
-        background: #0f172a;
-    }}
-    .home-fullscreen-lock .home-img {{
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center center;
-    }}
-    section.main > div:has(.home-img) {{
-        padding-top: 0;
-        padding-bottom: 0;
-        padding-left: 0;
-        padding-right: 0;
-        max-width: 100%;
-    }}
-    .block-container:has(.home-fullscreen-lock),
-    [data-testid="stMainBlockContainer"]:has(.home-fullscreen-lock) {{
-        padding: 0 !important;
-        max-width: 100% !important;
-    }}
-    .login-img {{
-        width: 100%;
-        max-height: 180px;
-        object-fit: contain;
-        object-position: center;
-        border: 0;
-        display: block;
-        margin: 0 auto 22px auto;
-    }}
-    div[data-testid="stMetricValue"] {{
-        color: {texto_app};
-    }}
-    h1, h2, h3, h4, h5, h6,
     p, label, legend,
     [data-testid="stMarkdownContainer"],
     [data-testid="stWidgetLabel"],
-    [data-testid="stCaptionContainer"],
-    [data-testid="stSidebar"] span,
-    [data-testid="stSidebar"] p,
-    .stButton > button,
-    .stDownloadButton button,
-    button[kind="primary"],
-    button[kind="secondary"] {{
-        text-transform: capitalize;
+    [data-testid="stCaptionContainer"] {{
+        color: {texto_app};
     }}
-    .metric-value {{
-        text-transform: none;
+    [data-testid="stCaptionContainer"] {{
+        color: {texto_suave};
     }}
-    .stButton > button, .stDownloadButton button, button[kind="primary"], button[kind="secondary"] {{
-        min-height: 44px;
-        white-space: nowrap;
-        font-size: 14px !important;
-        border-radius: 8px !important;
-        border: 1px solid rgba(148, 163, 184, .55) !important;
-        background:
-            linear-gradient(180deg, rgba(255,255,255,.24) 0%, rgba(255,255,255,.08) 42%, rgba(0,0,0,.18) 100%),
-            linear-gradient(135deg, {cor_principal}, #2563eb) !important;
-        color: #ffffff !important;
-        box-shadow:
-            0 7px 0 #020617,
-            0 15px 24px rgba(0, 0, 0, .36),
-            inset 0 2px 0 rgba(255, 255, 255, .28),
-            inset 0 -2px 0 rgba(0, 0, 0, .22) !important;
-        transform: translateY(0);
-        transition: transform .10s ease, box-shadow .10s ease, filter .12s ease;
-        font-weight: 800 !important;
-        text-shadow: 0 1px 1px rgba(0,0,0,.34);
+    .saas-card, .metric-card, div[data-testid="stExpander"] {{
+        background: rgba(255, 255, 255, .94);
+        border: 1px solid {borda_card};
+        border-radius: 8px;
+        box-shadow: var(--alpes-shadow);
+        backdrop-filter: blur(10px);
     }}
-    .stButton > button:hover, .stDownloadButton button:hover, button[kind="primary"]:hover, button[kind="secondary"]:hover {{
-        transform: translateY(-2px);
-        filter: brightness(1.12);
-        box-shadow:
-            0 9px 0 #020617,
-            0 21px 32px rgba(0, 0, 0, .42),
-            inset 0 2px 0 rgba(255, 255, 255, .34),
-            inset 0 -2px 0 rgba(0, 0, 0, .22) !important;
+    .saas-card {{
+        padding: 24px;
     }}
-    .stButton > button:active, .stDownloadButton button:active, button[kind="primary"]:active, button[kind="secondary"]:active {{
-        transform: translateY(6px);
-        box-shadow:
-            0 1px 0 #020617,
-            0 7px 12px rgba(0, 0, 0, .30),
-            inset 0 3px 8px rgba(0, 0, 0, .38) !important;
+    .metric-card {{
+        position: relative;
+        overflow: hidden;
+        padding: 20px;
+        min-height: 118px;
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
     }}
-    [data-testid="stSidebar"] {{
-        border-right: 1px solid rgba(148, 163, 184, .18);
-        box-shadow: 14px 0 32px rgba(0, 0, 0, .20);
-    }}
-    [data-testid="stMainBlockContainer"] {{
-        padding-top: 2.4rem;
-    }}
-    h1 {{
-        font-size: 2.65rem !important;
-        line-height: 1.08 !important;
-        margin-bottom: 1.2rem !important;
-        letter-spacing: 0 !important;
-    }}
-    h2, h3 {{
-        letter-spacing: 0 !important;
-    }}
-    .saas-card, .metric-card {{
-        backdrop-filter: blur(8px);
-        transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    .metric-card::before {{
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 4px;
+        background: linear-gradient(180deg, var(--alpes-orange), var(--alpes-navy));
     }}
     .metric-card:hover {{
+        transform: translateY(-3px);
+        border-color: rgba(249, 115, 22, .38);
+        box-shadow: 0 22px 55px rgba(11, 31, 58, .14);
+    }}
+    .metric-label {{
+        color: {texto_suave};
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 9px;
+    }}
+    .metric-value {{
+        color: var(--alpes-navy);
+        font-size: 30px;
+        line-height: 1.08;
+        font-weight: 850;
+        text-transform: none;
+    }}
+    .status-pill, .stock-pill, .category-pill {{
+        border-radius: 999px;
+        padding: 7px 11px;
+        font-size: 12px;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 28px;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }}
+    .status-pill {{
+        width: 100%;
+        color: #DCFCE7;
+        background: rgba(34, 197, 94, .16);
+        border-color: rgba(34, 197, 94, .34);
+    }}
+    .status-pill.warning {{
+        color: #FEF3C7;
+        background: rgba(249, 115, 22, .18);
+        border-color: rgba(249, 115, 22, .34);
+    }}
+    .stock-ok {{
+        color: #166534;
+        background: #DCFCE7;
+        border-color: #BBF7D0;
+    }}
+    .stock-low {{
+        color: #991B1B;
+        background: #FEE2E2;
+        border-color: #FECACA;
+    }}
+    .stock-critical {{
+        color: #7F1D1D;
+        background: #FECACA;
+        border-color: #FCA5A5;
+    }}
+    .category-pill {{
+        color: var(--pill-color, var(--alpes-navy));
+        background: color-mix(in srgb, var(--pill-color, var(--alpes-navy)) 13%, white);
+        border-color: color-mix(in srgb, var(--pill-color, var(--alpes-navy)) 30%, white);
+    }}
+    .login-img {{
+        width: 100%;
+        max-height: 150px;
+        object-fit: contain;
+        object-position: center;
+        display: block;
+        margin: 0 auto 18px auto;
+    }}
+    .login-brand {{
+        text-align: center;
+        margin-bottom: 18px;
+    }}
+    .login-brand-title {{
+        color: var(--alpes-navy);
+        font-size: 1.65rem;
+        font-weight: 900;
+    }}
+    .login-brand-subtitle {{
+        color: var(--alpes-muted);
+        font-size: .92rem;
+        margin-top: 4px;
+    }}
+    .login-shell-marker {{
+        display: none;
+    }}
+    .home-hero {{
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+        min-height: 250px;
+        padding: 30px;
+        background:
+            linear-gradient(110deg, rgba(11, 31, 58, .92), rgba(11, 31, 58, .62)),
+            var(--home-image, linear-gradient(135deg, #0B1F3A, #102F54));
+        background-size: cover;
+        background-position: center;
+        box-shadow: 0 24px 70px rgba(11, 31, 58, .22);
+        margin-bottom: 20px;
+    }}
+    .home-hero h1 {{
+        color: #FFFFFF !important;
+        margin: 0 0 10px 0 !important;
+        font-size: 2.35rem !important;
+    }}
+    .home-hero p {{
+        color: rgba(255,255,255,.82);
+        max-width: 760px;
+        font-size: 1rem;
+    }}
+    .home-hero-badges {{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 22px;
+    }}
+    .home-hero-badges span {{
+        color: #FFFFFF;
+        border: 1px solid rgba(255,255,255,.22);
+        background: rgba(255,255,255,.10);
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 12px;
+        font-weight: 800;
+    }}
+    .stock-table-header, .stock-row {{
+        display: grid;
+        grid-template-columns: .9fr 2fr 1.45fr .9fr .9fr 1.35fr 1.15fr 1.35fr;
+        gap: 12px;
+        align-items: center;
+    }}
+    .stock-table-header {{
+        color: var(--alpes-muted);
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+        padding: 0 12px 8px 12px;
+    }}
+    .stock-row {{
+        background: #FFFFFF;
+        border: 1px solid var(--alpes-border);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        box-shadow: 0 10px 28px rgba(11, 31, 58, .07);
+        transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }}
+    .stock-row:hover {{
         transform: translateY(-2px);
-        border-color: rgba(96, 165, 250, .45);
-        box-shadow: 0 18px 38px rgba(0, 0, 0, .24);
+        border-color: rgba(249, 115, 22, .35);
+        box-shadow: 0 16px 38px rgba(11, 31, 58, .12);
+    }}
+    .stock-img {{
+        width: 100%;
+        max-height: 86px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: #F8FAFC;
+        border: 1px solid #E5E7EB;
+    }}
+    .muted {{
+        color: var(--alpes-muted);
+        font-size: 12px;
+    }}
+    [data-testid="stSidebar"] {{
+        background:
+            linear-gradient(180deg, #0B1F3A 0%, #071426 100%) !important;
+        border-right: 1px solid rgba(255, 255, 255, .08);
+        box-shadow: 18px 0 42px rgba(11, 31, 58, .22);
+    }}
+    [data-testid="stSidebar"] * {{
+        color: rgba(255,255,255,.88);
+    }}
+    [data-testid="stSidebar"] h1 {{
+        color: #FFFFFF !important;
+        font-size: 1.1rem !important;
+        letter-spacing: .04em !important;
+        margin-bottom: .6rem !important;
+    }}
+    [data-testid="stSidebar"] [data-testid="stCaptionContainer"] {{
+        color: rgba(255,255,255,.60) !important;
+        font-size: 12px;
+    }}
+    [data-testid="stSidebar"] div[role="radiogroup"] label {{
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin: 5px 0;
+        border: 1px solid transparent;
+        background: transparent;
+        transition: background .16s ease, border-color .16s ease, transform .16s ease;
+    }}
+    [data-testid="stSidebar"] div[role="radiogroup"] label:hover {{
+        background: rgba(255, 255, 255, .08);
+        border-color: rgba(255, 255, 255, .12);
+        transform: translateX(2px);
+    }}
+    .stButton > button, .stDownloadButton button, button[kind="primary"], button[kind="secondary"] {{
+        min-height: 42px;
+        border-radius: 8px !important;
+        border: 1px solid rgba(11, 31, 58, .12) !important;
+        background: linear-gradient(135deg, var(--alpes-navy), #123A67) !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 10px 24px rgba(11, 31, 58, .16) !important;
+        font-weight: 800 !important;
+        transition: transform .14s ease, filter .14s ease, box-shadow .14s ease;
+    }}
+    .stButton > button:hover, .stDownloadButton button:hover, button[kind="primary"]:hover, button[kind="secondary"]:hover {{
+        transform: translateY(-1px);
+        filter: brightness(1.04);
+        box-shadow: 0 14px 30px rgba(11, 31, 58, .20) !important;
+    }}
+    .stButton > button:active, .stDownloadButton button:active, button[kind="primary"]:active, button[kind="secondary"]:active {{
+        transform: translateY(1px);
     }}
     div[data-baseweb="input"] > div,
     div[data-baseweb="select"] > div,
     textarea,
     [data-testid="stTextInput"] input,
-    [data-testid="stNumberInput"] input {{
-        background: #1f2430 !important;
-        border: 1px solid rgba(148, 163, 184, .22) !important;
+    [data-testid="stNumberInput"] input,
+    [data-testid="stDateInput"] input {{
+        background: #FFFFFF !important;
+        border: 1px solid #D1D5DB !important;
         border-radius: 8px !important;
-        color: #f8fafc !important;
+        color: var(--alpes-text) !important;
+        min-height: 42px;
+        transition: border-color .15s ease, box-shadow .15s ease;
     }}
     div[data-baseweb="input"]:focus-within > div,
     div[data-baseweb="select"]:focus-within > div,
     [data-testid="stTextInput"] input:focus,
     [data-testid="stNumberInput"] input:focus,
+    [data-testid="stDateInput"] input:focus,
     textarea:focus {{
-        border-color: {cor_principal} !important;
-        box-shadow: 0 0 0 2px rgba(97, 87, 255, .22) !important;
+        border-color: var(--alpes-orange) !important;
+        box-shadow: 0 0 0 3px rgba(249, 115, 22, .16) !important;
     }}
     [data-testid="stDataFrame"],
     [data-testid="stTable"] {{
-        border: 1px solid rgba(148, 163, 184, .20);
-        border-radius: 10px;
+        border: 1px solid var(--alpes-border);
+        border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 12px 26px rgba(0, 0, 0, .16);
+        box-shadow: 0 14px 34px rgba(11, 31, 58, .08);
+        background: #FFFFFF;
     }}
     [data-testid="stAlert"] {{
-        border-radius: 10px;
-        border: 1px solid rgba(148, 163, 184, .22);
-        box-shadow: 0 10px 24px rgba(0, 0, 0, .14);
+        border-radius: 8px;
+        border: 1px solid rgba(11, 31, 58, .10);
+        box-shadow: 0 12px 28px rgba(11, 31, 58, .08);
     }}
     div[data-testid="stExpander"] {{
-        border: 1px solid rgba(148, 163, 184, .20);
-        border-radius: 10px;
         overflow: hidden;
-        background: rgba(17, 24, 39, .55);
     }}
     [data-testid="stSidebar"] .stButton > button,
     [data-testid="stSidebar"] .stDownloadButton button {{
         width: 100%;
+        background: rgba(255,255,255,.10) !important;
+        border-color: rgba(255,255,255,.18) !important;
+        box-shadow: none !important;
+    }}
+    @media (max-width: 820px) {{
+        [data-testid="stMainBlockContainer"] {{
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }}
+        h1 {{
+            font-size: 1.75rem !important;
+        }}
+        .home-hero {{
+            padding: 22px;
+            min-height: 230px;
+        }}
+        .home-hero h1 {{
+            font-size: 1.75rem !important;
+        }}
+        .stock-table-header {{
+            display: none;
+        }}
+        .stock-row {{
+            grid-template-columns: 1fr;
+        }}
+        .metric-value {{
+            font-size: 24px;
+        }}
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -1346,15 +1465,47 @@ if st.session_state.get("login_salvo_modo") in ["Desktop", "Mobile"]:
     st.session_state["modo_acesso"] = st.session_state["login_salvo_modo"]
 
 if not st.session_state["autenticado"]:
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background:
+                linear-gradient(135deg, rgba(11, 31, 58, .96), rgba(11, 31, 58, .82)),
+                radial-gradient(circle at 25% 15%, rgba(249, 115, 22, .28), transparent 24rem),
+                linear-gradient(135deg, #0B1F3A, #071426) !important;
+        }
+        [data-testid="stMainBlockContainer"] {
+            max-width: 520px !important;
+            margin: 6vh auto 4vh auto;
+            background: rgba(255, 255, 255, .96);
+            border: 1px solid rgba(255, 255, 255, .24);
+            border-radius: 8px;
+            box-shadow: 0 30px 90px rgba(2, 6, 23, .42);
+            backdrop-filter: blur(10px);
+            padding: 1.4rem 2rem !important;
+        }
+        [data-testid="stMainBlockContainer"] p,
+        [data-testid="stMainBlockContainer"] label,
+        [data-testid="stMainBlockContainer"] [data-testid="stMarkdownContainer"],
+        [data-testid="stMainBlockContainer"] [data-testid="stWidgetLabel"],
+        [data-testid="stMainBlockContainer"] [data-testid="stCaptionContainer"] {
+            color: #0F172A !important;
+        }
+        [data-testid="stMainBlockContainer"] button p {
+            color: #FFFFFF !important;
+        }
+        </style>
+        <div class='login-shell-marker'></div>
+        """,
+        unsafe_allow_html=True
+    )
     if st.session_state["modo_acesso"] == "Computador":
         st.session_state["modo_acesso"] = "Desktop"
     elif st.session_state["modo_acesso"] == "Celular":
         st.session_state["modo_acesso"] = "Mobile"
-    colunas_login = [0.08, 1, 0.08] if st.session_state["modo_acesso"] == "Mobile" else [1, 1.1, 1]
+    colunas_login = [0.001, 1, 0.001]
     c1, c2, c3 = st.columns(colunas_login)
     with c2:
-        st.markdown("<div class='saas-card'>", unsafe_allow_html=True)
         imagem_login = LOGIN_IMAGE if os.path.exists(LOGIN_IMAGE) else HOME_IMAGE_FALLBACK
         if os.path.exists(imagem_login):
             extensao = os.path.splitext(imagem_login)[1].lower().replace(".", "")
@@ -1363,8 +1514,16 @@ if not st.session_state["autenticado"]:
                 f"<img src='data:image/{mime};base64,{imagem_base64(imagem_login)}' class='login-img'>",
                 unsafe_allow_html=True
             )
-        st.title("Login")
-        st.write("Forma De Acesso")
+        st.markdown(
+            """
+            <div class='login-brand'>
+                <div class='login-brand-title'>ALPES</div>
+                <div class='login-brand-subtitle'>Gestão e Facilities | Plataforma Corporativa</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.caption("Forma de acesso")
         acesso_mobile, acesso_desktop = st.columns(2)
         if acesso_mobile.button(
             "Mobile",
@@ -1429,7 +1588,6 @@ if not st.session_state["autenticado"]:
                 st.rerun()
             else:
                 st.error("Login inválido. Verifique usuário/email e senha.")
-        st.markdown("</div>", unsafe_allow_html=True)
     st.stop()
 
 
@@ -1773,14 +1931,54 @@ def cor_categoria(cat):
         if item.get("nome", "").upper() == cat_upper:
             return item.get("cor", "white")
     if cat_upper in ["HIDRAULICA", "HIDRÁULICA"]:
-        return "#3498db"
+        return "#2563EB"
     if cat_upper in ["ELETRICA", "ELÉTRICA"]:
-        return "#e67e22"
+        return "#F97316"
     if cat_upper in ["MANUTENCAO", "MANUTENÇÃO"]:
-        return "#f1c40f"
+        return "#FACC15"
     if cat_upper == "JARDINAGEM":
-        return "#2ecc71"
+        return "#22C55E"
     return "white"
+
+
+def escape_html(valor):
+    return html.escape(str(valor if valor is not None else ""))
+
+
+def badge_categoria(categoria):
+    cor = cor_categoria(categoria)
+    if not cor or str(cor).lower() == "white":
+        cor = "#0B1F3A"
+    return f"<span class='category-pill' style='--pill-color:{cor}'>{escape_html(categoria)}</span>"
+
+
+def badge_estoque(estoque_atual, estoque_minimo):
+    try:
+        atual = float(estoque_atual)
+        minimo = float(estoque_minimo)
+    except Exception:
+        atual, minimo = 0, 0
+    if atual <= minimo:
+        classe = "stock-critical" if atual <= max(minimo * 0.5, 0) else "stock-low"
+        texto = "Crítico" if classe == "stock-critical" else "Baixo"
+    else:
+        classe = "stock-ok"
+        texto = "Normal"
+    return f"<span class='stock-pill {classe}'>{texto}</span>"
+
+
+def plotly_layout(fig, altura=360):
+    fig.update_layout(
+        height=altura,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family=fonte, color="#0F172A"),
+        margin=dict(l=20, r=20, t=42, b=20),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    fig.update_xaxes(showgrid=False, zeroline=False)
+    fig.update_yaxes(gridcolor="rgba(100,116,139,.16)", zeroline=False)
+    return fig
 
 
 def filtrar_movimentacoes(df_base, periodo="30 dias", tipo="Todos", categoria="Todas", produto="Todos", data_ini=None, data_fim=None):
@@ -2717,9 +2915,40 @@ def tela_responsavel_frota():
 # =========================
 # MENU
 # =========================
-st.sidebar.title("MENU")
+ICONES_MENU = {
+    "INICIO": "🏠",
+    "ALMOXARIFADO": "📦",
+    "BASES": "🏢",
+    "FROTAS": "🚚",
+    "CONFIGURAÇÕES": "⚙️",
+    "ESTOQUE": "📊",
+    "COMPRAS": "🛒",
+    "MOVIMENTAÇÃO": "🔁",
+    "PRODUTOS": "🏷️",
+    "CLIENTES": "👥",
+    "FORNECEDOR": "🤝",
+    "RELATÓRIOS": "📈",
+    "PAINEL": "📍",
+    "VEÍCULOS": "🚘",
+    "ENTREGA DE VEÍCULO": "📝",
+    "VISTORIAS": "✅",
+    "ABASTECIMENTOS": "⛽",
+    "MANUTENÇÕES": "🛠️",
+    "CONFERÊNCIA": "🔎",
+    "DOCUMENTOS": "📄",
+    "MINHA BASE": "🏢",
+    "LISTA DE FREQUÊNCIA": "📋",
+    "DESPESAS FROTAS": "💳",
+}
+
+
+def rotulo_menu(item):
+    return f"{ICONES_MENU.get(item, '•')} {item.title()}"
+
+
+st.sidebar.title("ALPES")
 usuario_logado = st.session_state.get("usuario_logado", {})
-st.sidebar.caption(f"Usuário logado: {usuario_logado.get('nome', '')} | {usuario_logado.get('nivel', '')}")
+st.sidebar.caption(f"{usuario_logado.get('nome', '')} | {usuario_logado.get('nivel', '')}")
 
 if st.session_state.get("confirmar_saida_backup"):
     tela_backup_obrigatorio_saida()
@@ -2749,7 +2978,8 @@ if supervisor_base_mode:
         "Menu Supervisor",
         opcoes_supervisor,
         label_visibility="collapsed",
-        key="menu_supervisor_base"
+        key="menu_supervisor_base",
+        format_func=rotulo_menu
     )
     subtela_supervisor_atual = st.session_state.get("subtela_faltas", "")
     if escolha_supervisor == "MINHA BASE":
@@ -2805,7 +3035,8 @@ else:
         "Menu principal",
         modulos_menu,
         index=modulos_menu.index(st.session_state["modulo_menu"]) if st.session_state["modulo_menu"] in modulos_menu else 0,
-        label_visibility="collapsed"
+        label_visibility="collapsed",
+        format_func=rotulo_menu
     )
     st.session_state["modulo_menu"] = modulo
 
@@ -2816,7 +3047,8 @@ else:
             "Opções do almoxarifado",
             opcoes_almoxarifado,
             index=opcoes_almoxarifado.index(menu_atual),
-            label_visibility="collapsed"
+            label_visibility="collapsed",
+            format_func=rotulo_menu
         )
     elif modulo == "BASES":
         menu = "BASES"
@@ -2829,7 +3061,8 @@ else:
             "Opções de frotas",
             opcoes_frotas,
             index=opcoes_frotas.index(subtela_frotas_atual),
-            label_visibility="collapsed"
+            label_visibility="collapsed",
+            format_func=rotulo_menu
         )
         menu = "FROTAS"
     elif modulo == "CONFIGURAÇÕES":
@@ -2879,31 +3112,8 @@ if menu == "INICIO":
         st.markdown(
             f"""
             <style>
-            .stApp {{
-                background:
-                    linear-gradient(120deg, rgba(2, 6, 23, .66), rgba(15, 23, 42, .50)),
-                    url("data:image/{mime_inicio};base64,{imagem_base64(imagem_inicio)}") center center / cover fixed no-repeat !important;
-            }}
-            [data-testid="stAppViewContainer"],
-            section.main {{
-                background: transparent !important;
-            }}
-            [data-testid="stMainBlockContainer"] {{
-                background: rgba(15, 23, 42, .72);
-                border: 1px solid rgba(255, 255, 255, .14);
-                border-radius: 18px;
-                box-shadow: 0 24px 70px rgba(0, 0, 0, .34);
-                backdrop-filter: blur(6px);
-                margin-top: 18px;
-                margin-bottom: 28px;
-            }}
-            [data-testid="stMainBlockContainer"] h1,
-            [data-testid="stMainBlockContainer"] h2,
-            [data-testid="stMainBlockContainer"] h3,
-            [data-testid="stMainBlockContainer"] p,
-            [data-testid="stMainBlockContainer"] label,
-            [data-testid="stMainBlockContainer"] [data-testid="stMarkdownContainer"] {{
-                color: #f8fafc;
+            .home-hero {{
+                --home-image: url("data:image/{mime_inicio};base64,{imagem_base64(imagem_inicio)}");
             }}
             </style>
             """,
@@ -2997,6 +3207,22 @@ if menu == "INICIO":
         frequencias_hoje = int((pd.to_datetime(df_faltas["data"], errors="coerce").dt.date == datetime.now().date()).sum())
     status_backup_inicio = "Pendente" if config.get("alteracao_pendente_backup", False) else "Atualizado"
 
+    st.markdown(
+        f"""
+        <div class='home-hero'>
+            <h1>Alpes Gestão e Facilities</h1>
+            <p>Central corporativa para almoxarifado, bases operacionais, frotas, auditoria e indicadores de gestão.</p>
+            <div class='home-hero-badges'>
+                <span>Sistema online</span>
+                <span>Backup: {escape_html(status_backup_inicio)}</span>
+                <span>Itens críticos: {produtos_criticos_inicio}</span>
+                <span>{escape_html(usuario_logado.get('nivel', ''))}</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
     st.subheader("Painel Gerencial")
     p1, p2, p3, p4 = st.columns(4)
     p1.markdown(f"<div class='metric-card'><div class='metric-label'>Faltas No Mês</div><div class='metric-value'>{faltas_mes}</div></div>", unsafe_allow_html=True)
@@ -3031,7 +3257,7 @@ elif menu == "ESTOQUE":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    busca = st.text_input("Busca", placeholder="Buscar por código, produto ou categoria", label_visibility="collapsed")
+    busca = st.text_input("Busca", placeholder="BUSCAR POR CÓDIGO, PRODUTO OU CATEGORIA", label_visibility="collapsed")
 
     with st.expander("Filtros Avançados"):
         f_col1, f_col2, f_col3 = st.columns(3)
@@ -3102,15 +3328,21 @@ elif menu == "ESTOQUE":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    headers = st.columns([1, 2, 2, 1, 1, 2, 2, 3])
-    headers[0].write("Código")
-    headers[1].write("Produto")
-    headers[2].write("Categoria")
-    headers[3].write("Estoque Atual")
-    headers[4].write("Estoque Mínimo")
-    headers[5].write("Localização")
-    headers[6].write("Situação")
-    headers[7].write("Imagem")
+    st.markdown(
+        """
+        <div class='stock-table-header'>
+            <div>Código</div>
+            <div>Produto</div>
+            <div>Categoria</div>
+            <div>Atual</div>
+            <div>Mínimo</div>
+            <div>Localização</div>
+            <div>Situação</div>
+            <div>Imagem</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     for i, row in df_filtrado.iterrows():
         col = st.columns([1, 2, 2, 1, 1, 2, 2, 3])
@@ -3120,11 +3352,11 @@ elif menu == "ESTOQUE":
         if col[1].button(row["produto"], key=f"prod_{i}"):
             st.session_state["produto"] = row["produto"]
 
-        col[2].markdown(f"<span style='color:{cor_categoria(row['categoria'])}'><b>{row['categoria']}</b></span>", unsafe_allow_html=True)
+        col[2].markdown(badge_categoria(row["categoria"]), unsafe_allow_html=True)
         col[3].write(int(row["estoque_atual"]))
         col[4].markdown(f"<span style='color:#facc15'><b>{row['estoque_minimo']}</b></span>", unsafe_allow_html=True)
         col[5].write(row["localizacao"])
-        col[6].write(row["situacao"])
+        col[6].markdown(badge_estoque(row["estoque_atual"], row["estoque_minimo"]), unsafe_allow_html=True)
 
         img = origem_imagem_produto(row["imagem"])
         if img:
@@ -4696,7 +4928,7 @@ elif menu in ["CONTROLE DE FALTAS", "BASES"]:
                 st.success(f"Solicitação de reposição salva em: {caminho_pdf}")
 
         st.markdown("<br>", unsafe_allow_html=True)
-        busca_base = st.text_input("Busca", placeholder="Buscar por código, produto ou categoria", label_visibility="collapsed", key=f"busca_estoque_base_{base_faltas_atual}")
+        busca_base = st.text_input("Busca", placeholder="BUSCAR POR CÓDIGO, PRODUTO OU CATEGORIA", label_visibility="collapsed", key=f"busca_estoque_base_{base_faltas_atual}")
 
         with st.expander("Filtros Avançados"):
             f_base_col1, f_base_col2 = st.columns(2)
@@ -4720,15 +4952,21 @@ elif menu in ["CONTROLE DE FALTAS", "BASES"]:
             df_base_filtrado = df_base_filtrado[df_base_filtrado["situacao"] == "🔴 ESTOQUE BAIXO"]
 
         st.markdown("<br>", unsafe_allow_html=True)
-        headers_base = st.columns([1, 2, 2, 1, 1, 2, 2, 3])
-        headers_base[0].write("Código")
-        headers_base[1].write("Produto")
-        headers_base[2].write("Categoria")
-        headers_base[3].write("Estoque Atual")
-        headers_base[4].write("Estoque Mínimo")
-        headers_base[5].write("Localização")
-        headers_base[6].write("Situação")
-        headers_base[7].write("Imagem")
+        st.markdown(
+            """
+            <div class='stock-table-header'>
+                <div>Código</div>
+                <div>Produto</div>
+                <div>Categoria</div>
+                <div>Atual</div>
+                <div>Mínimo</div>
+                <div>Localização</div>
+                <div>Situação</div>
+                <div>Imagem</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
         if df_base_filtrado.empty:
             st.info("Nenhum produto com estoque nesta base.")
@@ -4737,11 +4975,11 @@ elif menu in ["CONTROLE DE FALTAS", "BASES"]:
             col_base[0].write(row_base.get("codigo", ""))
             if col_base[1].button(row_base.get("produto", ""), key=f"prod_base_{base_faltas_atual}_{i_base}"):
                 st.session_state["produto_base_historico"] = str(row_base.get("produto", ""))
-            col_base[2].markdown(f"<span style='color:{cor_categoria(row_base.get('categoria', ''))}'><b>{row_base.get('categoria', '')}</b></span>", unsafe_allow_html=True)
+            col_base[2].markdown(badge_categoria(row_base.get("categoria", "")), unsafe_allow_html=True)
             col_base[3].write(int(float(row_base.get("estoque_atual", 0))))
             col_base[4].markdown(f"<span style='color:#facc15'><b>{int(float(row_base.get('estoque_minimo', 0)))}</b></span>", unsafe_allow_html=True)
             col_base[5].write(row_base.get("localizacao", ""))
-            col_base[6].write(row_base.get("situacao", ""))
+            col_base[6].markdown(badge_estoque(row_base.get("estoque_atual", 0), row_base.get("estoque_minimo", 0)), unsafe_allow_html=True)
             img_base = origem_imagem_produto(row_base.get("imagem", ""))
             if img_base:
                 col_base[7].image(img_base, use_container_width=True)
@@ -5026,21 +5264,46 @@ elif menu == "RELATÓRIOS":
         barras = pd.DataFrame({
             "Tipo": ["Entrada", "Saída"],
             "Quantidade": [metricas["entradas"], metricas["saidas"]]
-        }).set_index("Tipo")
-        st.bar_chart(barras)
+        })
+        if px:
+            fig_barras = px.bar(
+                barras,
+                x="Tipo",
+                y="Quantidade",
+                color="Tipo",
+                color_discrete_map={"Entrada": "#22C55E", "Saída": "#EF4444"},
+                text="Quantidade",
+            )
+            fig_barras.update_traces(textposition="outside", marker_line_width=0)
+            st.plotly_chart(plotly_layout(fig_barras), use_container_width=True)
+        else:
+            st.bar_chart(barras.set_index("Tipo"))
 
     with g2:
         st.subheader("Categorias")
         if not df_produtos.empty:
             categorias_pizza = df_produtos["categoria"].value_counts()
-            try:
-                import matplotlib.pyplot as plt
-                fig, ax = plt.subplots()
-                ax.pie(categorias_pizza.values, labels=categorias_pizza.index, autopct="%1.1f%%", startangle=90)
-                ax.axis("equal")
-                st.pyplot(fig)
-            except Exception:
-                st.dataframe(categorias_pizza.rename("Total"), use_container_width=True)
+            if px:
+                categorias_df = categorias_pizza.reset_index()
+                categorias_df.columns = ["Categoria", "Total"]
+                fig_pizza = px.donut(
+                    categorias_df,
+                    values="Total",
+                    names="Categoria",
+                    hole=.58,
+                    color_discrete_sequence=["#0B1F3A", "#F97316", "#22C55E", "#2563EB", "#FACC15", "#EF4444"],
+                )
+                fig_pizza.update_traces(textposition="inside", textinfo="percent+label")
+                st.plotly_chart(plotly_layout(fig_pizza), use_container_width=True)
+            else:
+                try:
+                    import matplotlib.pyplot as plt
+                    fig, ax = plt.subplots()
+                    ax.pie(categorias_pizza.values, labels=categorias_pizza.index, autopct="%1.1f%%", startangle=90)
+                    ax.axis("equal")
+                    st.pyplot(fig)
+                except Exception:
+                    st.dataframe(categorias_pizza.rename("Total"), use_container_width=True)
         else:
             st.info("Sem produtos cadastrados.")
 
@@ -5060,7 +5323,19 @@ elif menu == "RELATÓRIOS":
             top_clientes_mais = top_clientes_mais_grafico.copy()
             top_clientes_mais["total"] = top_clientes_mais["total"].map(lambda v: f"R$ {v:,.2f}")
             st.dataframe(formatar_colunas_tabela(top_clientes_mais), use_container_width=True, hide_index=True)
-            st.bar_chart(top_clientes_mais_grafico.set_index("cliente")[["total"]])
+            if px:
+                fig_clientes_mais = px.bar(
+                    top_clientes_mais_grafico,
+                    x="total",
+                    y="cliente",
+                    orientation="h",
+                    color_discrete_sequence=["#F97316"],
+                    text="total",
+                )
+                fig_clientes_mais.update_traces(texttemplate="R$ %{x:,.2f}", textposition="outside")
+                st.plotly_chart(plotly_layout(fig_clientes_mais, 330), use_container_width=True)
+            else:
+                st.bar_chart(top_clientes_mais_grafico.set_index("cliente")[["total"]])
         else:
             st.info("Sem dados de clientes.")
 
@@ -5071,7 +5346,19 @@ elif menu == "RELATÓRIOS":
             top_clientes_menos = top_clientes_menos_grafico.copy()
             top_clientes_menos["total"] = top_clientes_menos["total"].map(lambda v: f"R$ {v:,.2f}")
             st.dataframe(formatar_colunas_tabela(top_clientes_menos), use_container_width=True, hide_index=True)
-            st.bar_chart(top_clientes_menos_grafico.set_index("cliente")[["total"]])
+            if px:
+                fig_clientes_menos = px.bar(
+                    top_clientes_menos_grafico,
+                    x="total",
+                    y="cliente",
+                    orientation="h",
+                    color_discrete_sequence=["#0B1F3A"],
+                    text="total",
+                )
+                fig_clientes_menos.update_traces(texttemplate="R$ %{x:,.2f}", textposition="outside")
+                st.plotly_chart(plotly_layout(fig_clientes_menos, 330), use_container_width=True)
+            else:
+                st.bar_chart(top_clientes_menos_grafico.set_index("cliente")[["total"]])
         else:
             st.info("Sem dados de clientes.")
 
