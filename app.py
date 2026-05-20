@@ -1105,6 +1105,10 @@ st.markdown(f"""
         display: none !important;
         visibility: hidden !important;
     }}
+    [data-testid="stException"] {{
+        display: none !important;
+        visibility: hidden !important;
+    }}
     h1, h2, h3, h4, h5, h6 {{
         color: var(--alpes-navy) !important;
         letter-spacing: 0 !important;
@@ -2097,8 +2101,31 @@ def estoque_matriz_produto(produto):
     return float(pd.to_numeric(linha.iloc[0].get("estoque_atual", 0), errors="coerce") or 0)
 
 
+PERFIS_ADMIN = ["Administrador", "CEO"]
+PERFIS_SUPERVISOR_BASE = ["Supervisor Base", "Supervisor Base TMG"]
+PERFIS_MOTORISTA = ["Responsável Frota", "Motorista"]
+PERFIS_ALMOXARIFADO = ["Administrador", "CEO", "Administrativo", "Usuário", "Almoxarife", "Consulta"]
+PERFIS_RECEBIMENTO = ["Administrador", "CEO", "Administrativo", "ADM"]
+
+
+def nivel_usuario(usuario):
+    return usuario.get("nivel", "Usuário") if isinstance(usuario, dict) else "Usuário"
+
+
+def usuario_eh_admin(usuario):
+    return nivel_usuario(usuario) in PERFIS_ADMIN
+
+
+def usuario_eh_supervisor_base(usuario):
+    return nivel_usuario(usuario) in PERFIS_SUPERVISOR_BASE
+
+
+def usuario_eh_motorista(usuario):
+    return nivel_usuario(usuario) in PERFIS_MOTORISTA
+
+
 def usuario_pode_acessar_base(usuario, base):
-    if usuario.get("nivel") == "Administrador":
+    if usuario_eh_admin(usuario):
         return True
     bases_permitidas = usuario.get("bases_permitidas", [])
     if isinstance(bases_permitidas, str):
@@ -2107,22 +2134,32 @@ def usuario_pode_acessar_base(usuario, base):
 
 
 def usuario_pode_lancar_despesa_frota(usuario):
-    return usuario.get("nivel") in ["Administrador", "Supervisor Base", "Responsável Frota"] or bool(usuario.get("pode_lancar_despesa_frota", False))
+    return (
+        usuario_eh_admin(usuario)
+        or usuario_eh_supervisor_base(usuario)
+        or usuario_eh_motorista(usuario)
+        or bool(usuario.get("pode_lancar_despesa_frota", False))
+    )
 
 
 
 PERMISSOES_PERFIL = {
     "Administrador": ["INICIO", "ALMOXARIFADO", "BASES", "FROTAS", "CONFIGURAÇÕES"],
+    "CEO": ["INICIO", "ALMOXARIFADO", "BASES", "FROTAS", "CONFIGURAÇÕES"],
     "Administrativo": ["INICIO", "ALMOXARIFADO", "BASES", "FROTAS"],
+    "ADM": ["INICIO", "BASES", "FROTAS"],
     "Usuário": ["INICIO", "ALMOXARIFADO", "FROTAS"],
+    "Almoxarife": ["INICIO", "ALMOXARIFADO"],
     "Supervisor Base": ["INICIO", "BASES"],
+    "Supervisor Base TMG": ["INICIO", "BASES"],
     "Responsável Frota": ["FROTAS"],
+    "Motorista": ["FROTAS"],
     "Consulta": ["INICIO", "ALMOXARIFADO", "BASES", "FROTAS"],
 }
 
 
 def modulos_permitidos_usuario(usuario):
-    nivel = usuario.get("nivel", "Usuário") if isinstance(usuario, dict) else "Usuário"
+    nivel = nivel_usuario(usuario)
     return PERMISSOES_PERFIL.get(nivel, PERMISSOES_PERFIL["Usuário"])
 
 
@@ -2950,7 +2987,7 @@ st.sidebar.caption(f"{usuario_logado.get('nome', '')} | {usuario_logado.get('niv
 if st.session_state.get("confirmar_saida_backup"):
     tela_backup_obrigatorio_saida()
 
-if usuario_logado.get("nivel") == "Responsável Frota":
+if usuario_eh_motorista(usuario_logado):
     st.sidebar.divider()
     st.sidebar.markdown("<span class='status-pill'>Acesso restrito</span>", unsafe_allow_html=True)
     if st.sidebar.button("Sair", use_container_width=True):
@@ -2958,7 +2995,7 @@ if usuario_logado.get("nivel") == "Responsável Frota":
     tela_responsavel_frota()
     st.stop()
 
-supervisor_base_mode = usuario_logado.get("nivel") == "Supervisor Base"
+supervisor_base_mode = usuario_eh_supervisor_base(usuario_logado)
 
 if supervisor_base_mode:
     bases_supervisor = usuario_logado.get("bases_permitidas", [])
@@ -3015,6 +3052,8 @@ else:
         "DOCUMENTOS",
         "RELATÓRIOS"
     ]
+    if nivel_usuario(usuario_logado) == "ADM":
+        opcoes_frotas = ["CONFERÊNCIA", "RELATÓRIOS"]
 
     if "modulo_menu" not in st.session_state:
         if st.session_state["menu"] in opcoes_almoxarifado:
@@ -3053,7 +3092,7 @@ else:
         st.sidebar.caption("Frotas")
         subtela_frotas_atual = st.session_state.get("subtela_frotas", "PAINEL")
         if subtela_frotas_atual not in opcoes_frotas:
-            subtela_frotas_atual = "PAINEL"
+            subtela_frotas_atual = opcoes_frotas[0]
         st.session_state["subtela_frotas"] = st.sidebar.radio(
             "Opções de frotas",
             opcoes_frotas,
@@ -3102,23 +3141,6 @@ if supabase_configurado() and st.session_state.get("ultimo_erro_supabase"):
 # INICIO
 # =========================
 if menu == "INICIO":
-    imagem_inicio = HOME_IMAGE if os.path.exists(HOME_IMAGE) else HOME_IMAGE_FALLBACK
-    if os.path.exists(imagem_inicio):
-        extensao_inicio = os.path.splitext(imagem_inicio)[1].lower().replace(".", "") or "jpg"
-        mime_inicio = "jpeg" if extensao_inicio in {"jpg", "jpeg"} else extensao_inicio
-        st.markdown(
-            f"""
-            <style>
-            .home-hero {{
-                --home-image: url("data:image/{mime_inicio};base64,{imagem_base64(imagem_inicio)}");
-            }}
-            </style>
-            """,
-            unsafe_allow_html=True,
-        )
-    else:
-        st.warning(f"Imagem não encontrada: {HOME_IMAGE}. Verifique se o caminho está correto e a imagem existe.")
-
     alertas_inicio_preventiva = alertas_manutencao_preventiva(df_frotas_manutencoes)
     assinatura_alerta_inicio = assinatura_alertas_preventiva(alertas_inicio_preventiva)
     alerta_inicio_oculto = (
@@ -3203,22 +3225,6 @@ if menu == "INICIO":
     if not df_faltas.empty:
         frequencias_hoje = int((pd.to_datetime(df_faltas["data"], errors="coerce").dt.date == datetime.now().date()).sum())
     status_backup_inicio = "Pendente" if config.get("alteracao_pendente_backup", False) else "Atualizado"
-
-    st.markdown(
-        f"""
-        <div class='home-hero'>
-            <h1>Alpes Gestão e Facilities</h1>
-            <p>Central corporativa para almoxarifado, bases operacionais, frotas, auditoria e indicadores de gestão.</p>
-            <div class='home-hero-badges'>
-                <span>Sistema online</span>
-                <span>Backup: {escape_html(status_backup_inicio)}</span>
-                <span>Itens críticos: {produtos_criticos_inicio}</span>
-                <span>{escape_html(usuario_logado.get('nivel', ''))}</span>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
 
     st.subheader("Painel Gerencial")
     p1, p2, p3, p4 = st.columns(4)
@@ -4171,6 +4177,8 @@ elif menu in ["CONTROLE DE FALTAS", "BASES"]:
 
     elif not subtela_faltas and not supervisor_base_mode:
         abas_faltas = ["LISTA DE FREQUÊNCIA", "ESTOQUE", "DESPESAS FROTAS"]
+        if nivel_usuario(usuario_logado) == "ADM":
+            abas_faltas = ["LISTA DE FREQUÊNCIA"]
         nav_cols = st.columns(len(abas_faltas))
         for idx_nav, nome_aba in enumerate(abas_faltas):
             if nav_cols[idx_nav].button(
@@ -5923,7 +5931,7 @@ elif menu == "CONFIGURAÇÕES":
     st.markdown("<br>", unsafe_allow_html=True)
 
     usuario_atual = st.session_state.get("usuario_logado", {})
-    admin_logado = usuario_atual.get("nivel") == "Administrador"
+    admin_logado = usuario_eh_admin(usuario_atual)
 
     if admin_logado:
         tab_geral, tab_usuarios, tab_estoque, tab_categorias, tab_unidades, tab_aparencia, tab_backup, tab_auditoria = st.tabs([
@@ -5996,7 +6004,17 @@ elif menu == "CONFIGURAÇÕES":
             st.subheader("Gerenciar usuários")
             st.dataframe(pd.DataFrame([{k: v for k, v in u.items() if k != "senha"} for u in usuarios]), use_container_width=True)
 
-            niveis_usuario = ["Administrador", "Usuário", "Supervisor Base", "Responsável Frota"]
+            niveis_usuario = [
+                "CEO",
+                "Administrador",
+                "ADM",
+                "Almoxarife",
+                "Supervisor Base TMG",
+                "Motorista",
+                "Usuário",
+                "Supervisor Base",
+                "Responsável Frota",
+            ]
             colunas_frotas_usuarios = ["placa", "modelo", "marca", "ano", "tipo", "responsavel", "cidade_local", "status", "km_atual"]
             for coluna_frota in colunas_frotas_usuarios:
                 if coluna_frota not in df_frotas_veiculos.columns:
@@ -6021,16 +6039,16 @@ elif menu == "CONFIGURAÇÕES":
                 bases_permitidas = st.multiselect(
                     "Bases Permitidas",
                     BASES_FREQUENCIA,
-                    default=BASES_FREQUENCIA if nivel == "Administrador" else ["TMG BASE SORRISO"] if nivel == "Supervisor Base" else [],
+                    default=BASES_FREQUENCIA if nivel in ["Administrador", "CEO", "Supervisor Base TMG"] else ["TMG BASE SORRISO"] if nivel == "Supervisor Base" else [],
                     key="bases_criar_usuario"
                 )
                 pode_lancar_despesa_frota = st.checkbox(
                     "Permitir Lançamento De Despesas De Frota",
-                    value=nivel in ["Administrador", "Supervisor Base", "Responsável Frota"],
+                    value=nivel in ["Administrador", "CEO", "Supervisor Base", "Supervisor Base TMG", "Responsável Frota", "Motorista"],
                     key="pode_lancar_frota_criar"
                 )
                 with st.form("criar_usuario"):
-                    if nivel == "Responsável Frota":
+                    if nivel in ["Responsável Frota", "Motorista"]:
                         if responsaveis_frota:
                             nome = st.selectbox("Nome", responsaveis_frota)
                         else:
@@ -6040,7 +6058,7 @@ elif menu == "CONFIGURAÇÕES":
                         nome = st.text_input("Nome")
                     email_user = st.text_input("Email")
                     veiculos_frota = []
-                    if nivel == "Responsável Frota" or pode_lancar_despesa_frota:
+                    if nivel in ["Responsável Frota", "Motorista"] or pode_lancar_despesa_frota:
                         if nome and "responsavel" in df_frotas_veiculos.columns and "placa" in df_frotas_veiculos.columns:
                             veiculos_sugeridos = df_frotas_veiculos[
                                 df_frotas_veiculos["responsavel"].astype(str).apply(
@@ -6060,9 +6078,9 @@ elif menu == "CONFIGURAÇÕES":
                         email_existe = bool(email_user) and any(u.get("email", "").lower() == email_user.lower() for u in usuarios)
                         if not nome or not senha:
                             st.error("Informe nome e senha.")
-                        elif nivel == "Responsável Frota" and not responsaveis_frota:
+                        elif nivel in ["Responsável Frota", "Motorista"] and not responsaveis_frota:
                             st.error("Cadastre o responsável no veículo em Frotas antes de criar este usuário.")
-                        elif (nivel == "Responsável Frota" or pode_lancar_despesa_frota) and not veiculos_frota:
+                        elif (nivel in ["Responsável Frota", "Motorista"] or pode_lancar_despesa_frota) and not veiculos_frota:
                             st.error("Selecione pelo menos um veículo liberado para lançamento de despesas.")
                         elif nome_existe:
                             st.error("Já existe um usuário com esse nome.")
@@ -6075,7 +6093,7 @@ elif menu == "CONFIGURAÇÕES":
                                 "nivel": nivel,
                                 "veiculo_frota": veiculos_frota[0] if len(veiculos_frota) == 1 else "",
                                 "veiculos_frota": veiculos_frota,
-                                "bases_permitidas": BASES_FREQUENCIA if nivel == "Administrador" else bases_permitidas,
+                                "bases_permitidas": BASES_FREQUENCIA if nivel in ["Administrador", "CEO"] else bases_permitidas,
                                 "pode_lancar_despesa_frota": bool(pode_lancar_despesa_frota),
                                 "senha": hash_senha(senha),
                                 "status": "Ativo",
@@ -6109,11 +6127,11 @@ elif menu == "CONFIGURAÇÕES":
                         bases_permitidas = st.multiselect(
                             "Bases Permitidas",
                             BASES_FREQUENCIA,
-                            default=BASES_FREQUENCIA if nivel == "Administrador" else [b for b in bases_atuais if b in BASES_FREQUENCIA]
+                            default=BASES_FREQUENCIA if nivel in ["Administrador", "CEO"] else [b for b in bases_atuais if b in BASES_FREQUENCIA]
                         )
                         pode_lancar_despesa_frota = st.checkbox(
                             "Permitir Lançamento De Despesas De Frota",
-                            value=bool(usuarios[idx].get("pode_lancar_despesa_frota", False)) or nivel in ["Administrador", "Supervisor Base", "Responsável Frota"]
+                            value=bool(usuarios[idx].get("pode_lancar_despesa_frota", False)) or nivel in ["Administrador", "CEO", "Supervisor Base", "Supervisor Base TMG", "Responsável Frota", "Motorista"]
                         )
                         veiculos_atuais = usuarios[idx].get("veiculos_frota", [])
                         if isinstance(veiculos_atuais, str):
@@ -6123,7 +6141,7 @@ elif menu == "CONFIGURAÇÕES":
                             veiculos_atuais.append(veiculo_antigo)
                         veiculos_edicao = sorted(set(veiculos_ativos_usuarios + veiculos_atuais))
                         veiculos_frota = []
-                        if nivel == "Responsável Frota" or pode_lancar_despesa_frota:
+                        if nivel in ["Responsável Frota", "Motorista"] or pode_lancar_despesa_frota:
                             veiculos_frota = st.multiselect(
                                 "Veículos Liberados",
                                 veiculos_edicao,
@@ -6137,7 +6155,7 @@ elif menu == "CONFIGURAÇÕES":
                             usuarios[idx]["status"] = status_usuario
                             usuarios[idx]["veiculo_frota"] = veiculos_frota[0] if len(veiculos_frota) == 1 else ""
                             usuarios[idx]["veiculos_frota"] = veiculos_frota
-                            usuarios[idx]["bases_permitidas"] = BASES_FREQUENCIA if nivel == "Administrador" else bases_permitidas
+                            usuarios[idx]["bases_permitidas"] = BASES_FREQUENCIA if nivel in ["Administrador", "CEO"] else bases_permitidas
                             usuarios[idx]["pode_lancar_despesa_frota"] = bool(pode_lancar_despesa_frota)
                             if nova_senha_admin:
                                 usuarios[idx]["senha"] = hash_senha(nova_senha_admin)
@@ -6151,9 +6169,9 @@ elif menu == "CONFIGURAÇÕES":
                     selecionado = st.selectbox("Usuário", nomes, key="inativar_usuario")
                     if st.button("Inativar usuário"):
                         usuario = next(u for u in usuarios if u["nome"] == selecionado)
-                        admins = [u for u in usuarios if u.get("nivel") == "Administrador"]
-                        if usuario.get("nivel") == "Administrador" and len(admins) <= 1:
-                            st.error("Não é permitido inativar o último administrador.")
+                        admins = [u for u in usuarios if u.get("nivel") in PERFIS_ADMIN]
+                        if usuario.get("nivel") in PERFIS_ADMIN and len(admins) <= 1:
+                            st.error("Não é permitido inativar o último usuário com acesso total.")
                         else:
                             antes_usuario = dict(usuario)
                             usuario["status"] = "Inativo"
