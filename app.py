@@ -1447,6 +1447,361 @@ st.markdown(f"""
         border-color: rgba(255,255,255,.18) !important;
         box-shadow: none !important;
     }}
+    .stApp {{
+        background:
+            radial-gradient(circle at 8% 8%, rgba(242, 140, 40, .16), transparent 24rem),
+            radial-gradient(circle at 92% 14%, rgba(56, 189, 248, .14), transparent 25rem),
+            linear-gradient(135deg, #061C3F 0%, #08152E 46%, #050D1F 100%) !important;
+        color: rgba(248, 250, 252, .92);
+    }}
+    .stApp::before {{
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+            linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px),
+            linear-gradient(0deg, rgba(255,255,255,.026) 1px, transparent 1px),
+            radial-gradient(circle at 65% 38%, rgba(124, 58, 237, .12), transparent 24rem);
+        background-size: 88px 88px, 88px 88px, auto;
+        mask-image: linear-gradient(120deg, rgba(0,0,0,.86), transparent 78%);
+        z-index: 0;
+    }}
+    [data-testid="stMainBlockContainer"] {{
+        position: relative;
+        z-index: 1;
+        padding-top: 1.1rem;
+        max-width: 1480px;
+    }}
+    h1, h2, h3, h4, h5, h6 {{
+        color: #F8FAFC !important;
+    }}
+    p, label, legend,
+    [data-testid="stMarkdownContainer"],
+    [data-testid="stWidgetLabel"],
+    [data-testid="stCaptionContainer"] {{
+        color: rgba(226,232,240,.88);
+    }}
+    .saas-card, .metric-card, div[data-testid="stExpander"] {{
+        background: linear-gradient(145deg, rgba(8, 21, 46, .74), rgba(5, 13, 31, .56)) !important;
+        border: 1px solid rgba(148, 163, 184, .20) !important;
+        border-radius: 18px !important;
+        box-shadow: 0 28px 80px rgba(2, 8, 23, .35), inset 0 1px 0 rgba(255,255,255,.08) !important;
+        backdrop-filter: blur(18px);
+    }}
+    .metric-card {{
+        min-height: 132px;
+        border-radius: 20px !important;
+    }}
+    .metric-card::before {{
+        width: 3px;
+        background: linear-gradient(180deg, #F28C28, #38BDF8);
+        box-shadow: 0 0 26px rgba(242, 140, 40, .55);
+    }}
+    .metric-label {{
+        color: rgba(186, 199, 217, .86) !important;
+    }}
+    .metric-value {{
+        color: #F8FAFC !important;
+    }}
+    [data-testid="stSidebar"] {{
+        background:
+            radial-gradient(circle at top, rgba(242, 140, 40, .13), transparent 18rem),
+            linear-gradient(180deg, rgba(6, 28, 63, .96) 0%, rgba(5, 13, 31, .98) 100%) !important;
+        border-right: 1px solid rgba(148, 163, 184, .18);
+        box-shadow: 24px 0 80px rgba(2, 8, 23, .42);
+    }}
+    [data-testid="stSidebar"] div[role="radiogroup"] label {{
+        border-radius: 14px;
+        padding: 12px 13px;
+        margin: 6px 0;
+        border: 1px solid rgba(255,255,255,.04);
+        background: rgba(255,255,255,.035);
+    }}
+    [data-testid="stSidebar"] div[role="radiogroup"] label:hover {{
+        background: rgba(242, 140, 40, .12);
+        border-color: rgba(242, 140, 40, .35);
+        box-shadow: 0 10px 30px rgba(242, 140, 40, .12);
+        transform: translateX(4px);
+    }}
+    [data-testid="stSidebar"] div[role="radiogroup"] label[data-baseweb="radio"] {{
+        transition: all .18s ease;
+    }}
+    .status-pill {{
+        background: rgba(34, 197, 94, .14);
+        border-color: rgba(34, 197, 94, .34);
+        box-shadow: 0 0 28px rgba(34, 197, 94, .14);
+    }}
+    [data-testid="stDataFrame"],
+    [data-testid="stTable"] {{
+        background: rgba(5, 13, 31, .64) !important;
+        border: 1px solid rgba(148, 163, 184, .18) !important;
+        border-radius: 18px !important;
+        box-shadow: 0 28px 80px rgba(2, 8, 23, .32) !important;
+    }}
+    .alpes-topbar {{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 14px 16px;
+        margin-bottom: 18px;
+        border: 1px solid rgba(148, 163, 184, .18);
+        border-radius: 22px;
+        background: rgba(8, 21, 46, .58);
+        box-shadow: 0 22px 70px rgba(2, 8, 23, .28), inset 0 1px 0 rgba(255,255,255,.08);
+        backdrop-filter: blur(18px);
+    }}
+    .alpes-search {{
+        flex: 1;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 14px;
+        border-radius: 16px;
+        background: rgba(255,255,255,.07);
+        border: 1px solid rgba(148, 163, 184, .17);
+        color: rgba(226,232,240,.72);
+        font-weight: 700;
+    }}
+    .alpes-kbd {{
+        margin-left: auto;
+        color: rgba(255,255,255,.78);
+        border: 1px solid rgba(255,255,255,.18);
+        border-radius: 9px;
+        padding: 3px 8px;
+        background: rgba(255,255,255,.06);
+        font-size: .72rem;
+    }}
+    .topbar-right {{
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        white-space: nowrap;
+    }}
+    .top-icon, .user-avatar {{
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        border-radius: 14px;
+        background: rgba(255,255,255,.07);
+        border: 1px solid rgba(255,255,255,.12);
+    }}
+    .user-avatar {{
+        background: linear-gradient(135deg, #F28C28, #FB923C);
+        color: #FFFFFF;
+        font-weight: 900;
+        box-shadow: 0 14px 36px rgba(242, 140, 40, .25);
+    }}
+    .user-meta strong {{
+        display: block;
+        color: #FFFFFF;
+        font-size: .86rem;
+        line-height: 1.1;
+    }}
+    .user-meta span {{
+        color: rgba(226,232,240,.58);
+        font-size: .72rem;
+    }}
+    .premium-hero {{
+        position: relative;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: 1.35fr .65fr;
+        gap: 20px;
+        min-height: 292px;
+        padding: 34px;
+        border-radius: 28px;
+        border: 1px solid rgba(96, 165, 250, .24);
+        background:
+            linear-gradient(120deg, rgba(6, 28, 63, .82), rgba(8, 21, 46, .52)),
+            var(--home-image, linear-gradient(135deg, #061C3F, #050D1F));
+        background-size: cover;
+        background-position: center;
+        box-shadow: 0 36px 110px rgba(2, 8, 23, .42), inset 0 1px 0 rgba(255,255,255,.10);
+        backdrop-filter: blur(20px);
+        margin-bottom: 18px;
+    }}
+    .premium-hero::after {{
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            linear-gradient(115deg, transparent 0%, rgba(56, 189, 248, .12) 52%, transparent 53%),
+            radial-gradient(circle at 84% 24%, rgba(242, 140, 40, .18), transparent 18rem);
+    }}
+    .premium-hero h1 {{
+        position: relative;
+        z-index: 1;
+        color: #FFFFFF !important;
+        font-size: 2.65rem !important;
+        margin: 0 0 12px !important;
+    }}
+    .premium-hero p {{
+        position: relative;
+        z-index: 1;
+        max-width: 760px;
+        color: rgba(226,232,240,.82) !important;
+        font-size: 1rem;
+        line-height: 1.7;
+    }}
+    .premium-badges {{
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 24px;
+    }}
+    .premium-badges span {{
+        color: #F8FAFC;
+        border: 1px solid rgba(255,255,255,.16);
+        background: rgba(255,255,255,.09);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: .78rem;
+        font-weight: 850;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    }}
+    .hero-logo-panel {{
+        position: relative;
+        z-index: 1;
+        align-self: stretch;
+        display: grid;
+        place-items: center;
+        border-radius: 24px;
+        border: 1px solid rgba(255,255,255,.13);
+        background: rgba(2, 8, 23, .25);
+        backdrop-filter: blur(14px);
+    }}
+    .hero-logo-panel img {{
+        width: min(330px, 90%);
+        opacity: .92;
+        filter: drop-shadow(0 26px 60px rgba(0,0,0,.34));
+    }}
+    .hero-watermark {{
+        position: absolute;
+        right: -20px;
+        bottom: -42px;
+        color: rgba(255,255,255,.045);
+        font-size: 9rem;
+        font-weight: 950;
+        letter-spacing: .04em;
+        z-index: 0;
+    }}
+    .premium-kpi-grid {{
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin: 16px 0 22px;
+    }}
+    .premium-kpi {{
+        position: relative;
+        overflow: hidden;
+        min-height: 142px;
+        padding: 20px;
+        border-radius: 22px;
+        border: 1px solid rgba(148, 163, 184, .20);
+        background: linear-gradient(145deg, rgba(8, 21, 46, .76), rgba(5, 13, 31, .55));
+        box-shadow: 0 26px 78px rgba(2,8,23,.30), inset 0 1px 0 rgba(255,255,255,.08);
+        transition: all .18s ease;
+    }}
+    .premium-kpi:hover {{
+        transform: translateY(-4px);
+        border-color: rgba(242, 140, 40, .42);
+        box-shadow: 0 32px 90px rgba(2,8,23,.38), 0 0 36px rgba(242, 140, 40, .10);
+    }}
+    .kpi-icon {{
+        width: 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        border-radius: 15px;
+        margin-bottom: 14px;
+        color: #FFFFFF;
+        background: rgba(242, 140, 40, .16);
+        border: 1px solid rgba(242, 140, 40, .30);
+    }}
+    .kpi-label {{
+        color: rgba(186,199,217,.85);
+        font-size: .76rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }}
+    .kpi-value {{
+        color: #FFFFFF;
+        font-size: 2rem;
+        line-height: 1.1;
+        font-weight: 950;
+        margin-top: 7px;
+    }}
+    .kpi-trend {{
+        color: rgba(226,232,240,.62);
+        font-size: .78rem;
+        margin-top: 8px;
+    }}
+    .dashboard-section {{
+        margin-top: 20px;
+    }}
+    .section-title-row {{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 8px 0 12px;
+    }}
+    .section-title-row h2 {{
+        margin: 0 !important;
+        font-size: 1.35rem !important;
+    }}
+    .premium-select-pill {{
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.14);
+        background: rgba(255,255,255,.08);
+        color: rgba(226,232,240,.82);
+        padding: 8px 12px;
+        font-weight: 800;
+        font-size: .78rem;
+    }}
+    .summary-strip {{
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 14px;
+    }}
+    .summary-mini {{
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: rgba(255,255,255,.065);
+        border: 1px solid rgba(255,255,255,.10);
+    }}
+    .summary-mini strong {{
+        display: block;
+        color: #FFFFFF;
+        font-size: 1.45rem;
+    }}
+    .summary-mini span {{
+        color: rgba(226,232,240,.64);
+        font-size: .78rem;
+    }}
+    .actions-table-wrap {{
+        padding: 18px;
+        border-radius: 24px;
+        background: linear-gradient(145deg, rgba(8, 21, 46, .70), rgba(5, 13, 31, .54));
+        border: 1px solid rgba(148, 163, 184, .18);
+        box-shadow: 0 28px 80px rgba(2,8,23,.30), inset 0 1px 0 rgba(255,255,255,.08);
+    }}
+    @media (max-width: 1100px) {{
+        .premium-hero {{
+            grid-template-columns: 1fr;
+        }}
+        .premium-kpi-grid {{
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }}
+    }}
     @media (max-width: 820px) {{
         [data-testid="stMainBlockContainer"] {{
             padding-left: 1rem;
@@ -3346,7 +3701,10 @@ def rotulo_menu(item):
     return f"{ICONES_MENU.get(item, '•')} {item.title()}"
 
 
-st.sidebar.title("ALPES")
+if os.path.exists(LOGIN_LOGO_IMAGE):
+    st.sidebar.image(LOGIN_LOGO_IMAGE, use_container_width=True)
+else:
+    st.sidebar.title("ALPES")
 usuario_logado = st.session_state.get("usuario_logado", {})
 st.sidebar.caption(f"{usuario_logado.get('nome', '')} | {usuario_logado.get('nivel', '')}")
 
@@ -3608,35 +3966,176 @@ if menu == "INICIO":
     if not df_faltas.empty:
         frequencias_hoje = int((pd.to_datetime(df_faltas["data"], errors="coerce").dt.date == datetime.now().date()).sum())
     status_backup_inicio = "Pendente" if config.get("alteracao_pendente_backup", False) else "Atualizado"
+    auditoria_inicio = carregar_json(AUDITORIA_JSON, [])
+    logo_home_html = ""
+    if os.path.exists(LOGIN_LOGO_IMAGE):
+        extensao_logo_home = os.path.splitext(LOGIN_LOGO_IMAGE)[1].lower().replace(".", "") or "png"
+        mime_logo_home = "jpeg" if extensao_logo_home in {"jpg", "jpeg"} else extensao_logo_home
+        logo_home_html = (
+            f"<img src='data:image/{mime_logo_home};base64,{imagem_base64(LOGIN_LOGO_IMAGE)}' "
+            "alt='ALPES Gestão e Facilities'>"
+        )
+    nome_usuario_topbar = escape_html(usuario_logado.get("nome", "Mestre") or "Mestre")
+    nivel_usuario_topbar = escape_html(usuario_logado.get("nivel", "Administrador") or "Administrador")
+    agora_topbar = datetime.now()
 
     st.markdown(
         f"""
-        <div class='home-hero'>
-            <h1>Alpes Gestão e Facilities</h1>
-            <p>Central corporativa para almoxarifado, bases operacionais, frotas, auditoria e indicadores de gestão.</p>
-            <div class='home-hero-badges'>
-                <span>Sistema online</span>
-                <span>Backup: {escape_html(status_backup_inicio)}</span>
-                <span>Itens críticos: {produtos_criticos_inicio}</span>
-                <span>{escape_html(usuario_logado.get('nivel', ''))}</span>
+        <div class='alpes-topbar'>
+            <div class='top-icon'>☰</div>
+            <div class='alpes-search'>⌕ Buscar módulos, registros, ações... <span class='alpes-kbd'>CTRL + K</span></div>
+            <div class='topbar-right'>
+                <div class='top-icon'>🔔</div>
+                <div class='top-icon'>📅</div>
+                <div class='user-avatar'>{escape_html(nome_usuario_topbar[:1].upper())}</div>
+                <div class='user-meta'><strong>{nome_usuario_topbar}</strong><span>{nivel_usuario_topbar}</span></div>
+                <div class='premium-select-pill'>{agora_topbar.strftime('%d/%m/%Y %H:%M')}</div>
+            </div>
+        </div>
+        <section class='premium-hero'>
+            <div>
+                <h1>Alpes Gestão e Instalações</h1>
+                <p>Central corporativa para almoxarifado, bases operacionais, frotas, auditorias e indicadores de gestão.</p>
+                <div class='premium-badges'>
+                    <span>● Sistema online</span>
+                    <span>Backup: {escape_html(status_backup_inicio)}</span>
+                    <span>Itens críticos: {produtos_criticos_inicio}</span>
+                    <span>{nivel_usuario_topbar}</span>
+                </div>
+            </div>
+            <div class='hero-logo-panel'>
+                {logo_home_html}
+                <div class='hero-watermark'>ALPES</div>
+            </div>
+        </section>
+        <div class='premium-kpi-grid'>
+            <div class='premium-kpi'>
+                <div class='kpi-icon'>📋</div>
+                <div class='kpi-label'>Faltas no mês</div>
+                <div class='kpi-value'>{faltas_mes}</div>
+                <div class='kpi-trend'>Indicador mensal de frequência</div>
+            </div>
+            <div class='premium-kpi'>
+                <div class='kpi-icon'>▣</div>
+                <div class='kpi-label'>Produtos críticos</div>
+                <div class='kpi-value'>{produtos_criticos_inicio}</div>
+                <div class='kpi-trend'>Estoque abaixo do mínimo</div>
+            </div>
+            <div class='premium-kpi'>
+                <div class='kpi-icon'>✓</div>
+                <div class='kpi-label'>Frequência hoje</div>
+                <div class='kpi-value'>{'OK' if frequencias_hoje else 'Pendente'}</div>
+                <div class='kpi-trend'>{frequencias_hoje} registro(s) no dia</div>
+            </div>
+            <div class='premium-kpi'>
+                <div class='kpi-icon'>↗</div>
+                <div class='kpi-label'>Despesas frota</div>
+                <div class='kpi-value'>{despesas_pendentes_inicio}</div>
+                <div class='kpi-trend'>Lançamentos aguardando conferência</div>
             </div>
         </div>
         """,
         unsafe_allow_html=True
     )
 
-    st.subheader("Painel Gerencial")
-    p1, p2, p3, p4 = st.columns(4)
-    p1.markdown(f"<div class='metric-card'><div class='metric-label'>Faltas No Mês</div><div class='metric-value'>{faltas_mes}</div></div>", unsafe_allow_html=True)
-    p2.markdown(f"<div class='metric-card'><div class='metric-label'>Produtos Críticos</div><div class='metric-value'>{produtos_criticos_inicio}</div></div>", unsafe_allow_html=True)
-    p3.markdown(f"<div class='metric-card'><div class='metric-label'>Frequência Hoje</div><div class='metric-value'>{'OK' if frequencias_hoje else 'Pendente'}</div></div>", unsafe_allow_html=True)
-    p4.markdown(f"<div class='metric-card'><div class='metric-label'>Despesas Frota</div><div class='metric-value'>{despesas_pendentes_inicio}</div></div>", unsafe_allow_html=True)
-    st.caption(f"Backup: {status_backup_inicio} | Último backup: {config.get('ultimo_backup', 'Nunca')}")
+    dias_resumo = [(datetime.now().date() - timedelta(days=i)) for i in range(6, -1, -1)]
+    auditoria_df_inicio = pd.DataFrame(auditoria_inicio) if auditoria_inicio else pd.DataFrame()
+    if not auditoria_df_inicio.empty and "data_hora" in auditoria_df_inicio.columns:
+        auditoria_datas_inicio = pd.to_datetime(auditoria_df_inicio["data_hora"], dayfirst=True, errors="coerce").dt.date
+    else:
+        auditoria_datas_inicio = pd.Series([], dtype="object")
+    datas_faltas_resumo = pd.to_datetime(df_faltas["data"], errors="coerce").dt.date if not df_faltas.empty else pd.Series([], dtype="object")
+    datas_frota_resumo = []
+    if not df_frotas_abastecimentos.empty and "data" in df_frotas_abastecimentos.columns:
+        datas_frota_resumo.extend(pd.to_datetime(df_frotas_abastecimentos["data"], errors="coerce").dt.date.dropna().tolist())
+    if not df_frotas_manutencoes.empty and "data" in df_frotas_manutencoes.columns:
+        datas_frota_resumo.extend(pd.to_datetime(df_frotas_manutencoes["data"], errors="coerce").dt.date.dropna().tolist())
 
-    auditoria_inicio = carregar_json(AUDITORIA_JSON, [])
+    linhas_resumo = []
+    for dia in dias_resumo:
+        chamados = int((auditoria_datas_inicio == dia).sum()) if len(auditoria_datas_inicio) else 0
+        ordens = int((datas_faltas_resumo == dia).sum()) if len(datas_faltas_resumo) else 0
+        concluidos = int(sum(1 for data_frota in datas_frota_resumo if data_frota == dia))
+        linhas_resumo.extend([
+            {"Dia": dia.strftime("%d/%m"), "Indicador": "Chamados", "Total": chamados},
+            {"Dia": dia.strftime("%d/%m"), "Indicador": "Ordens de serviço", "Total": ordens},
+            {"Dia": dia.strftime("%d/%m"), "Indicador": "Concluídos", "Total": concluidos},
+        ])
+    df_resumo_operacional = pd.DataFrame(linhas_resumo)
+
+    st.markdown(
+        """
+        <div class='dashboard-section'>
+            <div class='section-title-row'>
+                <h2>Resumo Operacional</h2>
+                <span class='premium-select-pill'>Últimos 7 dias</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    if px:
+        fig_resumo = px.line(
+            df_resumo_operacional,
+            x="Dia",
+            y="Total",
+            color="Indicador",
+            markers=True,
+            color_discrete_map={
+                "Chamados": "#38BDF8",
+                "Ordens de serviço": "#A78BFA",
+                "Concluídos": "#F28C28",
+            },
+        )
+        fig_resumo.update_layout(
+            template="plotly_dark",
+            height=330,
+            margin=dict(l=18, r=18, t=22, b=18),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(5, 13, 31, .34)",
+            font=dict(color="#E2E8F0"),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            xaxis=dict(gridcolor="rgba(148,163,184,.12)", zerolinecolor="rgba(148,163,184,.12)"),
+            yaxis=dict(gridcolor="rgba(148,163,184,.12)", zerolinecolor="rgba(148,163,184,.12)"),
+        )
+        fig_resumo.update_traces(line=dict(width=3), marker=dict(size=8))
+        st.plotly_chart(fig_resumo, use_container_width=True, config={"displayModeBar": False})
+    else:
+        st.dataframe(df_resumo_operacional, use_container_width=True, hide_index=True)
+
+    total_chamados_resumo = int(df_resumo_operacional[df_resumo_operacional["Indicador"] == "Chamados"]["Total"].sum())
+    total_ordens_resumo = int(df_resumo_operacional[df_resumo_operacional["Indicador"] == "Ordens de serviço"]["Total"].sum())
+    total_concluidos_resumo = int(df_resumo_operacional[df_resumo_operacional["Indicador"] == "Concluídos"]["Total"].sum())
+    st.markdown(
+        f"""
+        <div class='summary-strip'>
+            <div class='summary-mini'><strong>{total_chamados_resumo}</strong><span>Total chamados</span></div>
+            <div class='summary-mini'><strong>{total_concluidos_resumo}</strong><span>Concluídos</span></div>
+            <div class='summary-mini'><strong>{total_ordens_resumo}</strong><span>Em andamento</span></div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
     if auditoria_inicio:
-        st.subheader("Últimas Ações")
-        st.dataframe(formatar_colunas_tabela(pd.DataFrame(auditoria_inicio[-8:])), use_container_width=True, hide_index=True)
+        st.markdown(
+            """
+            <div class='dashboard-section'>
+                <div class='section-title-row'>
+                    <h2>Últimas Ações</h2>
+                    <span class='premium-select-pill'>Ver todas</span>
+                </div>
+                <div class='actions-table-wrap'>
+            """,
+            unsafe_allow_html=True
+        )
+        colunas_acoes = ["data_hora", "usuario", "nivel", "acao", "modulo", "registro", "detalhe"]
+        acoes_inicio = pd.DataFrame(auditoria_inicio[-8:])
+        for coluna_acao in colunas_acoes:
+            if coluna_acao not in acoes_inicio.columns:
+                acoes_inicio[coluna_acao] = ""
+        st.dataframe(formatar_colunas_tabela(acoes_inicio[colunas_acoes]), use_container_width=True, hide_index=True)
+        st.markdown("</div></div>", unsafe_allow_html=True)
 
 
 # =========================
