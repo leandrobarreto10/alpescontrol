@@ -1847,6 +1847,14 @@ st.markdown(f"""
         font-weight: 800;
         text-align: center;
     }}
+    .sidebar-help span {{
+        display: block;
+        margin-top: 8px;
+        color: rgba(226,232,240,.72);
+        font-size: .78rem;
+        font-weight: 700;
+        line-height: 1.35;
+    }}
     .sidebar-mini-chart {{
         height: 52px;
         margin: 10px 0 12px;
@@ -3910,7 +3918,15 @@ st.sidebar.caption(f"Último backup: {config.get('ultimo_backup', 'Nunca')}")
 st.sidebar.caption(f"Status do backup: {status_backup}")
 st.sidebar.caption(f"Itens críticos: {total_criticos_sidebar}")
 st.sidebar.markdown("<div class='sidebar-mini-chart'></div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-help'>? &nbsp; Central de Ajuda</div>", unsafe_allow_html=True)
+st.sidebar.markdown(
+    """
+    <div class='sidebar-help'>
+        ? &nbsp; Central de Ajuda<br>
+        <span>Suporte WhatsApp: (66) 99643-5753</span>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 if st.sidebar.button("Sair", use_container_width=True):
     solicitar_saida_com_backup()
