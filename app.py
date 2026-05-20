@@ -946,6 +946,23 @@ def marcar_backup_pendente(caminho=""):
     config["alteracao_pendente_backup"] = True
     config["ultima_alteracao"] = datetime.now().strftime("%d/%m/%Y %H:%M")
     salvar_config_sem_marcar_backup()
+    if (
+        config.get("backup_automatico_alteracao", True)
+        and "gerar_backup" in globals()
+        and not st.session_state.get("backup_automatico_em_execucao")
+        and not st.session_state.get("salvando_backup")
+    ):
+        st.session_state["backup_automatico_em_execucao"] = True
+        try:
+            caminho_backup = gerar_backup()
+            st.session_state["ultimo_backup_automatico_alteracao"] = caminho_backup
+            st.session_state.pop("erro_backup_automatico_alteracao", None)
+            if "registrar_auditoria" in globals():
+                registrar_auditoria("BACKUP_ALTERACAO", "BACKUP", caminho_backup, os.path.basename(caminho_backup))
+        except Exception as erro:
+            st.session_state["erro_backup_automatico_alteracao"] = str(erro)[:700]
+        finally:
+            st.session_state.pop("backup_automatico_em_execucao", None)
 
 
 def garantir_pasta_imagens_sistema():
@@ -1012,6 +1029,7 @@ def configuracao_padrao():
         "fonte": "Inter",
         "ultimo_backup": "Nunca",
         "backup_automatico_diario": True,
+        "backup_automatico_alteracao": True,
         "backup_google_drive_ativo": True,
         "backup_google_drive_pasta": "",
         "ultimo_backup_google_drive": "Nunca",
@@ -6343,6 +6361,15 @@ elif menu == "CONFIGURAÇÕES":
             salvar_json(CONFIG_JSON, config)
             registrar_auditoria("CONFIGURAR", "BACKUP", f"Backup automático diário: {backup_auto}", "backup_automatico_diario")
             st.rerun()
+        backup_auto_alteracao = st.toggle(
+            "Gerar backup automaticamente a cada alteração",
+            value=bool(config.get("backup_automatico_alteracao", True))
+        )
+        if backup_auto_alteracao != bool(config.get("backup_automatico_alteracao", True)):
+            config["backup_automatico_alteracao"] = bool(backup_auto_alteracao)
+            salvar_json(CONFIG_JSON, config)
+            registrar_auditoria("CONFIGURAR", "BACKUP", f"Backup por alteração: {backup_auto_alteracao}", "backup_automatico_alteracao")
+            st.rerun()
         backup_drive_ativo = st.toggle("Copiar backup para OneDrive / Google Drive", value=bool(config.get("backup_google_drive_ativo", True)))
         pasta_drive_atual = obter_pasta_backup_nuvem()
         pasta_drive = st.text_input(
@@ -6358,6 +6385,9 @@ elif menu == "CONFIGURAÇÕES":
         erro_drive_backup = st.session_state.get("ultimo_erro_backup_google_drive", "")
         if erro_drive_backup:
             st.warning(erro_drive_backup)
+        erro_backup_alteracao = st.session_state.get("erro_backup_automatico_alteracao", "")
+        if erro_backup_alteracao:
+            st.warning(f"Backup automático por alteração falhou: {erro_backup_alteracao}")
         if config.get("alteracao_pendente_backup", False):
             st.warning(f"Backup pendente desde: {config.get('ultima_alteracao', 'alteracao recente')}")
         else:
