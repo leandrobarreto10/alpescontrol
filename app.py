@@ -181,7 +181,7 @@ SUPABASE_ARQUIVO_TABELA = {
 
 SUPABASE_JSON_TABELA = {
     "usuarios.json": {"tabela": "usuarios", "chave": "nome"},
-    "auditoria.json": {"tabela": "logs", "chave": ""},
+    "auditoria.json": {"tabela": "logs_sistema", "chave": ""},
     "categorias.json": {"tabela": "categorias", "chave": "nome"},
     "unidades.json": {"tabela": "unidades", "chave": "nome"},
 }
@@ -344,6 +344,45 @@ def supabase_configuracoes_tem_dados():
         return False
 
 
+def supabase_migracao_concluida(nome_migracao):
+    client = obter_supabase_client()
+    if not client:
+        return False
+    try:
+        resposta = (
+            client.table("migracoes_sistema")
+            .select("id,status")
+            .eq("nome_migracao", nome_migracao)
+            .eq("status", "concluida")
+            .limit(1)
+            .execute()
+        )
+        return bool(getattr(resposta, "data", None))
+    except Exception:
+        return False
+
+
+def supabase_registrar_migracao(nome_migracao, status, importados=0, ignorados=0, erros=""):
+    client = obter_supabase_client()
+    if not client:
+        return False
+    try:
+        registro = {
+            "id": hashlib.sha256(str(nome_migracao).encode("utf-8")).hexdigest(),
+            "nome_migracao": str(nome_migracao),
+            "status": str(status),
+            "data_execucao": datetime.now().isoformat(),
+            "registros_importados": int(importados or 0),
+            "registros_ignorados": int(ignorados or 0),
+            "erros": str(erros or "")[:2000],
+        }
+        client.table("migracoes_sistema").upsert(registro, on_conflict="id").execute()
+        return True
+    except Exception as erro:
+        supabase_guardar_erro(erro)
+        return False
+
+
 def migrar_arquivo_dataframe_para_supabase(nome_arquivo, caminho, colunas):
     client = obter_supabase_client()
     cfg = SUPABASE_ARQUIVO_TABELA.get(nome_arquivo)
@@ -418,7 +457,12 @@ def migrar_pastas_storage_para_supabase():
 def migrar_dados_existentes_para_supabase():
     if not supabase_configurado() or st.session_state.get("migracao_supabase_executada"):
         return
+    nome_migracao = "migracao_inicial_arquivos"
+    if supabase_migracao_concluida(nome_migracao):
+        st.session_state["migracao_supabase_executada"] = True
+        return
     st.session_state["migracao_supabase_executada"] = True
+    st.session_state["migracao_supabase_em_execucao"] = True
     migrados = []
     try:
         for nome_arquivo, cfg in SUPABASE_ARQUIVO_TABELA.items():
@@ -432,6 +476,7 @@ def migrar_dados_existentes_para_supabase():
         if migrar_configuracoes_para_supabase():
             migrados.append("configuracoes.json")
         total_storage = migrar_pastas_storage_para_supabase()
+        supabase_registrar_migracao(nome_migracao, "concluida", len(migrados), 0, "")
         if migrados or total_storage:
             st.session_state["migracao_supabase_resumo"] = (
                 f"Migração Supabase concluída: {len(migrados)} arquivo(s) de dados e "
@@ -439,6 +484,9 @@ def migrar_dados_existentes_para_supabase():
             )
     except Exception as erro:
         st.session_state["ultimo_erro_supabase"] = str(erro)[:700]
+        supabase_registrar_migracao(nome_migracao, "erro", len(migrados), 0, str(erro))
+    finally:
+        st.session_state.pop("migracao_supabase_em_execucao", None)
 
 
 def supabase_upload_imagem_produto(arquivo, nome_arquivo):
@@ -479,7 +527,28 @@ def ambiente_streamlit_cloud():
     )
 
 
+def ambiente_execucao():
+    valor = (
+        obter_config_secreta("ENVIRONMENT", "")
+        or obter_config_secreta("ALPES_ENVIRONMENT", "")
+        or os.environ.get("ENVIRONMENT", "")
+        or os.environ.get("ALPES_ENVIRONMENT", "")
+    )
+    valor = str(valor or "").strip().lower()
+    if valor in {"production", "prod", "producao", "produção"}:
+        return "production"
+    if valor in {"development", "dev", "teste", "test", "staging"}:
+        return "development"
+    return "production" if ambiente_streamlit_cloud() else "development"
+
+
+def ambiente_producao():
+    return ambiente_execucao() == "production"
+
+
 def armazenamento_persistente_configurado():
+    if ambiente_producao():
+        return bool(supabase_configurado())
     return bool(supabase_configurado() or google_drive_configurado())
 
 
@@ -490,12 +559,33 @@ def exigir_armazenamento_persistente_online():
     return ambiente_streamlit_cloud()
 
 
-def bloquear_gravacao_sem_armazenamento(caminho):
-    if not exigir_armazenamento_persistente_online() or armazenamento_persistente_configurado():
-        return
+def fonte_local_permitida_para_dados():
+    return not ambiente_producao() or bool(st.session_state.get("migracao_supabase_em_execucao"))
+
+
+def arquivo_operacional(caminho):
     nome = os.path.basename(str(caminho or ""))
     arquivos_dados = set(SUPABASE_ARQUIVO_TABELA.keys()) | set(SUPABASE_JSON_TABELA.keys()) | {"configuracoes.json"}
-    if nome not in arquivos_dados:
+    return nome in arquivos_dados
+
+
+def erro_critico_supabase():
+    st.error("Erro crítico: Supabase não configurado. O sistema não pode operar em produção sem banco de dados.")
+    st.info("Configure SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY e SUPABASE_BUCKET nos Secrets do Streamlit Cloud.")
+    st.stop()
+
+
+def validar_supabase_producao():
+    if ambiente_producao() and not supabase_configurado():
+        erro_critico_supabase()
+
+
+def bloquear_gravacao_sem_armazenamento(caminho):
+    if ambiente_producao() and arquivo_operacional(caminho) and not supabase_configurado():
+        erro_critico_supabase()
+    if not exigir_armazenamento_persistente_online() or armazenamento_persistente_configurado():
+        return
+    if not arquivo_operacional(caminho):
         return
     st.error(
         "Armazenamento persistente não configurado. "
@@ -602,6 +692,66 @@ def supabase_upload_arquivo(caminho_local):
     except Exception as erro:
         supabase_guardar_erro(erro)
         return False
+
+
+def upload_arquivo_storage(caminho_relativo, dados, content_type=None, bucket_nome=None):
+    client = obter_supabase_client()
+    if not client or not caminho_relativo or dados is None:
+        return False
+    try:
+        bucket = client.storage.from_(bucket_nome or supabase_bucket_nome())
+        file_options = {
+            "content-type": content_type or mimetypes.guess_type(str(caminho_relativo))[0] or "application/octet-stream",
+            "x-upsert": "true",
+        }
+        try:
+            bucket.upload(caminho_relativo, dados, file_options=file_options)
+        except Exception:
+            bucket.update(caminho_relativo, dados, file_options=file_options)
+        return True
+    except Exception as erro:
+        supabase_guardar_erro(erro)
+        return False
+
+
+def baixar_url_arquivo(caminho_relativo, bucket_nome=None, validade_segundos=3600):
+    client = obter_supabase_client()
+    if not client or not caminho_relativo:
+        return ""
+    try:
+        resposta = client.storage.from_(bucket_nome or supabase_bucket_nome()).create_signed_url(
+            caminho_relativo,
+            validade_segundos
+        )
+        if isinstance(resposta, dict):
+            return resposta.get("signedURL") or resposta.get("signedUrl") or resposta.get("signed_url") or ""
+        return str(resposta or "")
+    except Exception as erro:
+        supabase_guardar_erro(erro)
+        return ""
+
+
+def excluir_arquivo_storage(caminho_relativo, bucket_nome=None):
+    client = obter_supabase_client()
+    if not client or not caminho_relativo:
+        return False
+    try:
+        client.storage.from_(bucket_nome or supabase_bucket_nome()).remove([caminho_relativo])
+        return True
+    except Exception as erro:
+        supabase_guardar_erro(erro)
+        return False
+
+
+def listar_arquivos_storage(pasta="", bucket_nome=None):
+    client = obter_supabase_client()
+    if not client:
+        return []
+    try:
+        return client.storage.from_(bucket_nome or supabase_bucket_nome()).list(pasta, {"limit": 1000, "offset": 0}) or []
+    except Exception as erro:
+        supabase_guardar_erro(erro)
+        return []
 
 
 def supabase_baixar_arquivo(caminho_local, caminho_relativo):
@@ -810,13 +960,15 @@ def sincronizar_drive_inicio():
 def upload_arquivo_remoto(caminho_local):
     if supabase_configurado():
         return supabase_upload_arquivo(caminho_local)
+    if ambiente_producao():
+        return False
     return drive_upload_arquivo(caminho_local)
 
 
 def sincronizar_armazenamento_inicio():
     if supabase_configurado():
         sincronizar_supabase_inicio()
-    else:
+    elif not ambiente_producao():
         sincronizar_drive_inicio()
 
 
@@ -837,6 +989,14 @@ def dataframe_to_excel_com_armazenamento(self, excel_writer, *args, **kwargs):
             st.error("Perfil de consulta não pode alterar dados.")
             if "registrar_auditoria" in globals():
                 registrar_auditoria("BLOQUEAR_ALTERACAO", "PERMISSÕES", os.path.basename(caminho_excel), os.path.basename(caminho_excel))
+            return None
+        if ambiente_producao() and arquivo_operacional(caminho_excel):
+            if not supabase_salvar_dataframe(caminho_excel, self):
+                erro = st.session_state.get("ultimo_erro_supabase", "")
+                st.error(f"Erro ao salvar no Supabase. Nenhum dado foi gravado localmente. {erro}")
+                st.stop()
+            if "registrar_auditoria" in globals():
+                registrar_auditoria("SALVAR_BANCO", "DADOS", os.path.basename(caminho_excel), os.path.basename(caminho_excel))
             return None
     resultado = pd.DataFrame._alpes_to_excel_original(self, excel_writer, *args, **kwargs)
     if isinstance(excel_writer, (str, os.PathLike)):
@@ -896,6 +1056,7 @@ LOGIN_IMAGE = os.path.join(PASTA_IMAGENS_SISTEMA, "login.jpg")
 LOGIN_LOGO_IMAGE = os.path.join(PASTA_IMAGENS_SISTEMA, "logo_alpes_horizontal_negativo.png")
 HOME_IMAGE_FALLBACK = os.path.join(BASE_DIR, "Desktop 1.jpg")
 BASES_FREQUENCIA = ["TMG BASE SORRISO", "TMG BASE RONDONOPOLIS"]
+validar_supabase_producao()
 sincronizar_armazenamento_inicio()
 migrar_dados_existentes_para_supabase()
 
@@ -907,6 +1068,8 @@ def carregar_json(caminho, padrao):
     dados_supabase = supabase_ler_json(caminho, padrao)
     if dados_supabase is not None:
         return dados_supabase
+    if arquivo_operacional(caminho) and not fonte_local_permitida_para_dados():
+        return padrao
     if os.path.exists(caminho):
         try:
             with open(caminho, "r", encoding="utf-8") as arquivo:
@@ -918,6 +1081,12 @@ def carregar_json(caminho, padrao):
 
 def salvar_json(caminho, dados):
     bloquear_gravacao_sem_armazenamento(caminho)
+    if ambiente_producao() and arquivo_operacional(caminho):
+        if not supabase_salvar_json(caminho, dados):
+            erro = st.session_state.get("ultimo_erro_supabase", "")
+            st.error(f"Erro ao salvar no Supabase. Nenhum dado foi gravado localmente. {erro}")
+            st.stop()
+        return
     with open(caminho, "w", encoding="utf-8") as arquivo:
         json.dump(dados, arquivo, ensure_ascii=False, indent=4)
     supabase_salvar_json(caminho, dados)
@@ -939,6 +1108,8 @@ def carregar_dataframe(caminho, colunas):
     dados_supabase = supabase_ler_dataframe(caminho, colunas)
     if dados_supabase is not None:
         return dados_supabase
+    if arquivo_operacional(caminho) and not fonte_local_permitida_para_dados():
+        return pd.DataFrame(columns=colunas)
     if os.path.exists(caminho):
         try:
             return pd.read_excel(caminho)
@@ -968,6 +1139,9 @@ def registrar_auditoria(acao, modulo="", detalhe="", registro="", antes=None, de
         historico = []
     historico.append(item)
     historico = historico[-5000:]
+    if ambiente_producao():
+        supabase_salvar_json(AUDITORIA_JSON, historico)
+        return
     with open(AUDITORIA_JSON, "w", encoding="utf-8") as arquivo:
         json.dump(historico, arquivo, ensure_ascii=False, indent=4)
     supabase_salvar_json(AUDITORIA_JSON, historico)
@@ -975,6 +1149,9 @@ def registrar_auditoria(acao, modulo="", detalhe="", registro="", antes=None, de
 
 
 def salvar_config_sem_marcar_backup():
+    if ambiente_producao():
+        supabase_salvar_json(CONFIG_JSON, config)
+        return
     with open(CONFIG_JSON, "w", encoding="utf-8") as arquivo:
         json.dump(config, arquivo, ensure_ascii=False, indent=4)
     supabase_salvar_json(CONFIG_JSON, config)
@@ -1215,6 +1392,25 @@ def imagem_base64(caminho):
 def garantir_usuario_admin():
     usuarios = carregar_json(USUARIOS_JSON, [])
     if not usuarios:
+        if ambiente_producao():
+            admin_nome = obter_config_secreta("ALPES_ADMIN_USER", "").strip()
+            admin_email = obter_config_secreta("ALPES_ADMIN_EMAIL", admin_nome).strip()
+            admin_senha = obter_config_secreta("ALPES_ADMIN_PASSWORD", "").strip()
+            if not admin_nome or not admin_senha or admin_senha == "123":
+                st.error("Erro crítico: usuário administrador inicial não configurado para produção.")
+                st.info("Configure ALPES_ADMIN_USER e ALPES_ADMIN_PASSWORD nos Secrets. Não use a senha padrão 123.")
+                st.stop()
+            usuarios = [{
+                "nome": admin_nome,
+                "email": admin_email or admin_nome,
+                "senha": hash_senha(admin_senha),
+                "nivel": "Administrador",
+                "status": "Ativo",
+                "trocar_senha": True,
+                "criado_em": datetime.now().strftime("%d/%m/%Y %H:%M")
+            }]
+            salvar_json(USUARIOS_JSON, usuarios)
+            return usuarios
         usuarios = [{
             "nome": "admin",
             "email": "admin",
@@ -3641,12 +3837,21 @@ def nomes_responsaveis_frota(valor):
 def salvar_anexo_frota(arquivo, placa, tipo_lancamento):
     if not arquivo:
         return ""
-    os.makedirs(PASTA_ANEXOS_FROTAS, exist_ok=True)
     nome_original = os.path.basename(arquivo.name)
     nome_limpo = "".join(caractere for caractere in nome_original if caractere.isalnum() or caractere in "._- ").strip()
     placa_limpa = "".join(caractere for caractere in str(placa) if caractere.isalnum() or caractere in "-_").strip()
     prefixo = datetime.now().strftime("%Y%m%d_%H%M%S")
-    caminho = os.path.join(PASTA_ANEXOS_FROTAS, f"{prefixo}_{placa_limpa}_{tipo_lancamento}_{nome_limpo}")
+    caminho_storage = f"Anexos Frotas/{prefixo}_{placa_limpa}_{tipo_lancamento}_{nome_limpo}"
+    if ambiente_producao():
+        dados = arquivo.getbuffer()
+        content_type = getattr(arquivo, "type", None) or mimetypes.guess_type(nome_limpo)[0] or "application/octet-stream"
+        if not upload_arquivo_storage(caminho_storage, dados, content_type):
+            erro = st.session_state.get("ultimo_erro_supabase", "")
+            st.error(f"Erro ao enviar anexo para o Supabase Storage. {erro}")
+            st.stop()
+        return caminho_storage
+    os.makedirs(PASTA_ANEXOS_FROTAS, exist_ok=True)
+    caminho = os.path.join(PASTA_ANEXOS_FROTAS, os.path.basename(caminho_storage))
     with open(caminho, "wb") as destino:
         destino.write(arquivo.getbuffer())
     upload_arquivo_remoto(caminho)
@@ -3676,12 +3881,19 @@ def resolver_caminho_anexo(valor):
 def salvar_imagem_produto(arquivo, codigo, produto):
     if not arquivo:
         return ""
-    os.makedirs(PASTA_IMAGENS, exist_ok=True)
     extensao = os.path.splitext(arquivo.name)[1].lower()
     nome_base = f"{codigo}_{produto}".strip()
     nome_base = "".join(caractere for caractere in nome_base if caractere.isalnum() or caractere in "._- ").strip()
     nome_base = nome_base.replace(" ", "_") or datetime.now().strftime("%Y%m%d_%H%M%S")
     nome_arquivo = f"{nome_base}{extensao}"
+    if ambiente_producao():
+        url_supabase = supabase_upload_imagem_produto(arquivo, nome_arquivo)
+        if not url_supabase:
+            erro = st.session_state.get("ultimo_erro_supabase", "")
+            st.error(f"Erro ao enviar imagem para o Supabase Storage. {erro}")
+            st.stop()
+        return url_supabase
+    os.makedirs(PASTA_IMAGENS, exist_ok=True)
     caminho = os.path.join(PASTA_IMAGENS, nome_arquivo)
     contador = 1
     while os.path.exists(caminho):
@@ -3723,6 +3935,11 @@ def exibir_anexo_nota(caminho, chave):
     if caminho_original.lower().startswith(("http://", "https://")):
         st.link_button("Abrir Anexo", caminho_original, use_container_width=True)
         return
+    if ambiente_producao() and supabase_configurado():
+        url = baixar_url_arquivo(caminho_original)
+        if url:
+            st.link_button("Abrir Anexo", url, use_container_width=True)
+            return
     caminho = resolver_caminho_anexo(caminho_original)
     if not os.path.exists(caminho):
         st.warning("Nota anexada não encontrada no computador.")
@@ -7207,12 +7424,22 @@ elif menu == "CONFIGURAÇÕES":
                         "endereco": endereco
                     })
                     if logo:
-                        logo_path = os.path.join(BASE_DIR, f"logo_{logo.name}")
-                        with open(logo_path, "wb") as arquivo:
-                            arquivo.write(logo.getbuffer())
-                        upload_arquivo_remoto(logo_path) if os.path.abspath(logo_path).startswith(os.path.abspath(DATA_DIR)) else None
-                        marcar_backup_pendente(logo_path) if os.path.abspath(logo_path).startswith(os.path.abspath(DATA_DIR)) else None
-                        config["logo"] = logo_path
+                        nome_logo = "".join(caractere for caractere in os.path.basename(logo.name) if caractere.isalnum() or caractere in "._- ").strip()
+                        if ambiente_producao():
+                            caminho_logo = f"Imagens Sistema/logo_{nome_logo}"
+                            content_type = getattr(logo, "type", None) or mimetypes.guess_type(nome_logo)[0] or "application/octet-stream"
+                            if not upload_arquivo_storage(caminho_logo, logo.getbuffer(), content_type):
+                                erro = st.session_state.get("ultimo_erro_supabase", "")
+                                st.error(f"Erro ao enviar logo para o Supabase Storage. {erro}")
+                                st.stop()
+                            config["logo"] = caminho_logo
+                        else:
+                            logo_path = os.path.join(BASE_DIR, f"logo_{nome_logo}")
+                            with open(logo_path, "wb") as arquivo:
+                                arquivo.write(logo.getbuffer())
+                            upload_arquivo_remoto(logo_path) if os.path.abspath(logo_path).startswith(os.path.abspath(DATA_DIR)) else None
+                            marcar_backup_pendente(logo_path) if os.path.abspath(logo_path).startswith(os.path.abspath(DATA_DIR)) else None
+                            config["logo"] = logo_path
                     salvar_json(CONFIG_JSON, config)
                     st.success("Configurações gerais salvas.")
 

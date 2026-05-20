@@ -31,10 +31,14 @@ No Supabase, abra **Project Settings > API** e copie:
 No Streamlit Cloud, abra **Settings > Secrets** e adicione:
 
 ```toml
+ENVIRONMENT = "production"
 SUPABASE_URL = "COLE_AQUI_PROJECT_URL"
 SUPABASE_SERVICE_ROLE_KEY = "COLE_AQUI_SERVICE_ROLE_KEY"
 SUPABASE_BUCKET = "alpes-system"
 ALPES_EXIGIR_ARMAZENAMENTO_ONLINE = "true"
+ALPES_ADMIN_USER = "admin_alpes"
+ALPES_ADMIN_EMAIL = "admin@empresa.com"
+ALPES_ADMIN_PASSWORD = "USE_UMA_SENHA_FORTE"
 ```
 
 Depois clique em **Save changes** e **Reboot app**.
@@ -64,6 +68,14 @@ Com Supabase configurado:
 - logs de auditoria tambem sao enviados ao banco;
 - o app bloqueia gravacoes online se nao houver armazenamento persistente configurado.
 
+Em `ENVIRONMENT = "production"`, arquivos `.xlsx` e `.json` deixam de ser banco principal. Eles ficam permitidos apenas para migracao, exportacao, backup administrativo ou uso local de desenvolvimento.
+
+Se o Supabase nao estiver configurado em producao, o sistema para com a mensagem:
+
+```text
+Erro crítico: Supabase não configurado. O sistema não pode operar em produção sem banco de dados.
+```
+
 ## 6. Backup
 
 O backup principal passa a ser o banco PostgreSQL do Supabase.
@@ -76,7 +88,16 @@ Para exportar dados manualmente:
 
 Para uma rotina profissional, configure tambem backups/snapshots no painel do Supabase conforme o plano contratado.
 
-## 7. Observacao importante
+## 7. Ambientes recomendados
+
+Use projetos separados:
+
+- TESTE: um projeto Supabase separado para validacao.
+- PRODUCAO: outro projeto Supabase para uso real.
+
+Cada ambiente deve ter Secrets proprios, bucket proprio e banco proprio.
+
+## 8. Observacao importante
 
 Nunca coloque `SUPABASE_SERVICE_ROLE_KEY` no GitHub.
 

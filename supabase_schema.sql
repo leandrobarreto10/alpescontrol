@@ -262,7 +262,7 @@ create table if not exists configuracoes (
     updated_at timestamptz default now()
 );
 
-create table if not exists logs (
+create table if not exists logs_sistema (
     id text primary key,
     data_hora text,
     usuario text,
@@ -273,6 +273,64 @@ create table if not exists logs (
     detalhe text,
     antes text,
     depois text,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists migracoes_sistema (
+    id text primary key,
+    nome_migracao text unique,
+    status text,
+    data_execucao timestamptz,
+    registros_importados integer default 0,
+    registros_ignorados integer default 0,
+    erros text,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists permissoes (
+    id text primary key,
+    perfil text,
+    modulo text,
+    acao text,
+    permitido boolean default true,
+    ativo boolean default true,
+    usuario_criacao text,
+    usuario_alteracao text,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists bases (
+    id text primary key,
+    nome text unique,
+    status text default 'Ativo',
+    ativo boolean default true,
+    usuario_criacao text,
+    usuario_alteracao text,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists base_tmg_sorriso (
+    id text primary key,
+    tipo_registro text,
+    dados jsonb default '{}'::jsonb,
+    ativo boolean default true,
+    usuario_criacao text,
+    usuario_alteracao text,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists base_tmg_rondonopolis (
+    id text primary key,
+    tipo_registro text,
+    dados jsonb default '{}'::jsonb,
+    ativo boolean default true,
+    usuario_criacao text,
+    usuario_alteracao text,
     created_at timestamptz default now(),
     updated_at timestamptz default now()
 );
@@ -313,6 +371,25 @@ create table if not exists historicos (
     updated_at timestamptz default now()
 );
 
+do $$
+declare
+    tabela text;
+begin
+    foreach tabela in array array[
+        'produtos',
+        'usuarios',
+        'fornecedores',
+        'clientes',
+        'categorias',
+        'frotas_veiculos'
+    ]
+    loop
+        execute format('alter table %I add column if not exists ativo boolean default true', tabela);
+        execute format('alter table %I add column if not exists usuario_criacao text', tabela);
+        execute format('alter table %I add column if not exists usuario_alteracao text', tabela);
+    end loop;
+end $$;
+
 create or replace function alpes_set_updated_at()
 returns trigger
 language plpgsql
@@ -345,7 +422,12 @@ begin
         'bases_movimentacoes',
         'bases_transferencias',
         'configuracoes',
-        'logs',
+        'logs_sistema',
+        'migracoes_sistema',
+        'permissoes',
+        'bases',
+        'base_tmg_sorriso',
+        'base_tmg_rondonopolis',
         'compras',
         'relatorios',
         'historicos'
