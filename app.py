@@ -1101,9 +1101,18 @@ st.markdown(f"""
         max-width: 1440px;
     }}
     #MainMenu,
-    footer {{
+    footer,
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"],
+    [data-testid="stStatusWidget"],
+    [data-testid="stDeployButton"],
+    [data-testid="baseButton-header"] {{
         display: none !important;
         visibility: hidden !important;
+    }}
+    header {{
+        background: transparent !important;
+        height: 0 !important;
     }}
     h1, h2, h3, h4, h5, h6 {{
         color: var(--alpes-navy) !important;
