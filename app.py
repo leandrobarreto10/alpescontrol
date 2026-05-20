@@ -1438,18 +1438,18 @@ st.markdown(f"""
     }}
     .stButton > button, .stDownloadButton button, button[kind="primary"], button[kind="secondary"] {{
         min-height: 42px;
-        border-radius: 8px !important;
-        border: 1px solid rgba(11, 31, 58, .12) !important;
-        background: linear-gradient(135deg, var(--alpes-navy), #123A67) !important;
+        border-radius: 14px !important;
+        border: 1px solid rgba(242, 140, 40, .26) !important;
+        background: linear-gradient(135deg, rgba(242, 140, 40, .96), rgba(249, 115, 22, .82)) !important;
         color: #FFFFFF !important;
-        box-shadow: 0 10px 24px rgba(11, 31, 58, .16) !important;
+        box-shadow: 0 18px 42px rgba(242, 140, 40, .18), inset 0 1px 0 rgba(255,255,255,.18) !important;
         font-weight: 800 !important;
         transition: transform .14s ease, filter .14s ease, box-shadow .14s ease;
     }}
     .stButton > button:hover, .stDownloadButton button:hover, button[kind="primary"]:hover, button[kind="secondary"]:hover {{
         transform: translateY(-1px);
         filter: brightness(1.04);
-        box-shadow: 0 14px 30px rgba(11, 31, 58, .20) !important;
+        box-shadow: 0 22px 54px rgba(242, 140, 40, .24), 0 0 30px rgba(242, 140, 40, .12) !important;
     }}
     .stButton > button:active, .stDownloadButton button:active, button[kind="primary"]:active, button[kind="secondary"]:active {{
         transform: translateY(1px);
@@ -1466,12 +1466,25 @@ st.markdown(f"""
     [data-testid="stTextInput"] input,
     [data-testid="stNumberInput"] input,
     [data-testid="stDateInput"] input {{
-        background: #FFFFFF !important;
-        border: 1px solid #D1D5DB !important;
-        border-radius: 8px !important;
-        color: var(--alpes-text) !important;
+        background: rgba(8, 21, 46, .72) !important;
+        border: 1px solid rgba(148, 163, 184, .24) !important;
+        border-radius: 14px !important;
+        color: #F8FAFC !important;
         min-height: 42px;
         transition: border-color .15s ease, box-shadow .15s ease;
+    }}
+    div[data-baseweb="input"] input,
+    div[data-baseweb="select"] span,
+    textarea,
+    [data-testid="stTextInput"] input,
+    [data-testid="stNumberInput"] input,
+    [data-testid="stDateInput"] input {{
+        color: #F8FAFC !important;
+    }}
+    div[data-baseweb="input"] input::placeholder,
+    textarea::placeholder,
+    [data-testid="stTextInput"] input::placeholder {{
+        color: rgba(226,232,240,.48) !important;
     }}
     div[data-baseweb="input"]:focus-within > div,
     div[data-baseweb="select"]:focus-within > div,
@@ -1479,8 +1492,41 @@ st.markdown(f"""
     [data-testid="stNumberInput"] input:focus,
     [data-testid="stDateInput"] input:focus,
     textarea:focus {{
-        border-color: var(--alpes-orange) !important;
-        box-shadow: 0 0 0 3px rgba(249, 115, 22, .16) !important;
+        border-color: rgba(242, 140, 40, .72) !important;
+        box-shadow: 0 0 0 3px rgba(242, 140, 40, .16), 0 16px 40px rgba(2,8,23,.22) !important;
+    }}
+    [data-testid="stRadio"] [role="radiogroup"] {{
+        gap: 10px;
+    }}
+    [data-testid="stRadio"] label {{
+        padding: 10px 14px !important;
+        border-radius: 999px !important;
+        border: 1px solid rgba(148, 163, 184, .22) !important;
+        background: rgba(8, 21, 46, .62) !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+        transition: all .16s ease;
+    }}
+    [data-testid="stRadio"] label:hover {{
+        border-color: rgba(242, 140, 40, .42) !important;
+        background: rgba(242, 140, 40, .12) !important;
+        box-shadow: 0 14px 38px rgba(242, 140, 40, .10);
+        transform: translateY(-1px);
+    }}
+    [data-testid="stRadio"] label p,
+    [data-testid="stCheckbox"] label p {{
+        color: #F8FAFC !important;
+        font-weight: 800 !important;
+    }}
+    [data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child,
+    [data-testid="stCheckbox"] label > div:first-child {{
+        border-color: rgba(248,250,252,.72) !important;
+        background: rgba(255,255,255,.08) !important;
+    }}
+    [data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked),
+    [data-testid="stCheckbox"] label:has(input:checked) {{
+        border-color: rgba(242, 140, 40, .62) !important;
+        background: rgba(242, 140, 40, .16) !important;
+        box-shadow: 0 0 28px rgba(242, 140, 40, .12);
     }}
     [data-testid="stDataFrame"],
     [data-testid="stTable"] {{
