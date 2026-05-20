@@ -1544,16 +1544,17 @@ st.markdown(f"""
         align-items: center;
         justify-content: space-between;
         gap: 18px;
-        padding: 14px 16px;
-        margin-bottom: 18px;
-        border: 1px solid rgba(148, 163, 184, .18);
-        border-radius: 22px;
-        background: rgba(8, 21, 46, .58);
-        box-shadow: 0 22px 70px rgba(2, 8, 23, .28), inset 0 1px 0 rgba(255,255,255,.08);
+        padding: 14px 18px;
+        margin: -1.1rem -1rem 22px -1rem;
+        min-height: 76px;
+        border-bottom: 1px solid rgba(148, 163, 184, .15);
+        background: rgba(5, 13, 31, .34);
+        box-shadow: 0 22px 70px rgba(2, 8, 23, .18);
         backdrop-filter: blur(18px);
     }}
     .alpes-search {{
         flex: 1;
+        max-width: 520px;
         min-height: 44px;
         display: flex;
         align-items: center;
@@ -1611,9 +1612,9 @@ st.markdown(f"""
         display: grid;
         grid-template-columns: 1.35fr .65fr;
         gap: 20px;
-        min-height: 292px;
+        min-height: 238px;
         padding: 34px;
-        border-radius: 28px;
+        border-radius: 12px 28px 12px 12px;
         border: 1px solid rgba(96, 165, 250, .24);
         background:
             linear-gradient(120deg, rgba(6, 28, 63, .82), rgba(8, 21, 46, .52)),
@@ -1637,7 +1638,7 @@ st.markdown(f"""
         position: relative;
         z-index: 1;
         color: #FFFFFF !important;
-        font-size: 2.65rem !important;
+        font-size: 2.35rem !important;
         margin: 0 0 12px !important;
     }}
     .premium-hero p {{
@@ -1696,14 +1697,14 @@ st.markdown(f"""
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 16px;
-        margin: 16px 0 22px;
+        margin: 16px 0 8px;
     }}
     .premium-kpi {{
         position: relative;
         overflow: hidden;
         min-height: 142px;
-        padding: 20px;
-        border-radius: 22px;
+        padding: 20px 76px 18px 22px;
+        border-radius: 12px;
         border: 1px solid rgba(148, 163, 184, .20);
         background: linear-gradient(145deg, rgba(8, 21, 46, .76), rgba(5, 13, 31, .55));
         box-shadow: 0 26px 78px rgba(2,8,23,.30), inset 0 1px 0 rgba(255,255,255,.08);
@@ -1715,12 +1716,15 @@ st.markdown(f"""
         box-shadow: 0 32px 90px rgba(2,8,23,.38), 0 0 36px rgba(242, 140, 40, .10);
     }}
     .kpi-icon {{
+        position: absolute;
+        right: 22px;
+        top: 40px;
         width: 42px;
         height: 42px;
         display: grid;
         place-items: center;
         border-radius: 15px;
-        margin-bottom: 14px;
+        margin-bottom: 0;
         color: #FFFFFF;
         background: rgba(242, 140, 40, .16);
         border: 1px solid rgba(242, 140, 40, .30);
@@ -1746,6 +1750,19 @@ st.markdown(f"""
     }}
     .dashboard-section {{
         margin-top: 20px;
+    }}
+    .dashboard-grid {{
+        display: grid;
+        grid-template-columns: .9fr 1.1fr;
+        gap: 16px;
+        margin-top: 20px;
+    }}
+    .dashboard-panel {{
+        padding: 18px;
+        border-radius: 12px;
+        background: linear-gradient(145deg, rgba(8, 21, 46, .72), rgba(5, 13, 31, .56));
+        border: 1px solid rgba(96, 165, 250, .22);
+        box-shadow: 0 28px 80px rgba(2,8,23,.30), inset 0 1px 0 rgba(255,255,255,.08);
     }}
     .section-title-row {{
         display: flex;
@@ -1788,11 +1805,48 @@ st.markdown(f"""
         font-size: .78rem;
     }}
     .actions-table-wrap {{
-        padding: 18px;
-        border-radius: 24px;
-        background: linear-gradient(145deg, rgba(8, 21, 46, .70), rgba(5, 13, 31, .54));
-        border: 1px solid rgba(148, 163, 184, .18);
-        box-shadow: 0 28px 80px rgba(2,8,23,.30), inset 0 1px 0 rgba(255,255,255,.08);
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+    }}
+    .backup-line {{
+        margin: 8px 0 0;
+        color: rgba(186,199,217,.78);
+        font-size: .88rem;
+    }}
+    .alpes-footer {{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-top: 24px;
+        padding: 14px 28px;
+        border-top: 1px solid rgba(148,163,184,.16);
+        color: rgba(226,232,240,.66);
+        font-size: .86rem;
+    }}
+    .alpes-footer strong {{
+        color: #F28C28;
+    }}
+    .sidebar-help {{
+        margin-top: 16px;
+        padding: 16px;
+        border-radius: 12px;
+        background: rgba(255,255,255,.055);
+        border: 1px solid rgba(148,163,184,.18);
+        color: #FFFFFF;
+        font-weight: 800;
+        text-align: center;
+    }}
+    .sidebar-mini-chart {{
+        height: 52px;
+        margin: 10px 0 12px;
+        border-radius: 8px;
+        background:
+            linear-gradient(135deg, transparent 0 8%, rgba(59, 130, 246, .42) 8% 11%, transparent 11% 18%, rgba(59, 130, 246, .54) 18% 21%, transparent 21% 30%, rgba(59, 130, 246, .42) 30% 33%, transparent 33% 45%, rgba(59, 130, 246, .62) 45% 48%, transparent 48% 58%, rgba(59, 130, 246, .52) 58% 61%, transparent 61% 72%, rgba(59, 130, 246, .75) 72% 75%, transparent 75% 86%, rgba(59, 130, 246, .9) 86% 89%, transparent 89%),
+            rgba(59, 130, 246, .08);
     }}
     @media (max-width: 1100px) {{
         .premium-hero {{
@@ -1800,6 +1854,9 @@ st.markdown(f"""
         }}
         .premium-kpi-grid {{
             grid-template-columns: repeat(2, minmax(0, 1fr));
+        }}
+        .dashboard-grid {{
+            grid-template-columns: 1fr;
         }}
     }}
     @media (max-width: 820px) {{
@@ -3845,6 +3902,8 @@ status_backup = "Pendente" if backup_pendente else "Atualizado"
 st.sidebar.caption(f"Último backup: {config.get('ultimo_backup', 'Nunca')}")
 st.sidebar.caption(f"Status do backup: {status_backup}")
 st.sidebar.caption(f"Itens críticos: {total_criticos_sidebar}")
+st.sidebar.markdown("<div class='sidebar-mini-chart'></div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-help'>? &nbsp; Central de Ajuda</div>", unsafe_allow_html=True)
 
 if st.sidebar.button("Sair", use_container_width=True):
     solicitar_saida_com_backup()
@@ -3985,11 +4044,11 @@ if menu == "INICIO":
             <div class='top-icon'>☰</div>
             <div class='alpes-search'>⌕ Buscar módulos, registros, ações... <span class='alpes-kbd'>CTRL + K</span></div>
             <div class='topbar-right'>
-                <div class='top-icon'>🔔</div>
-                <div class='top-icon'>📅</div>
+                <div class='top-icon'>♢</div>
+                <div class='top-icon'>▣</div>
                 <div class='user-avatar'>{escape_html(nome_usuario_topbar[:1].upper())}</div>
                 <div class='user-meta'><strong>{nome_usuario_topbar}</strong><span>{nivel_usuario_topbar}</span></div>
-                <div class='premium-select-pill'>{agora_topbar.strftime('%d/%m/%Y %H:%M')}</div>
+                <div class='premium-select-pill'>{agora_topbar.strftime('%d/%m/%Y')} &nbsp; ◷ {agora_topbar.strftime('%H:%M')}</div>
             </div>
         </div>
         <section class='premium-hero'>
@@ -4010,30 +4069,31 @@ if menu == "INICIO":
         </section>
         <div class='premium-kpi-grid'>
             <div class='premium-kpi'>
-                <div class='kpi-icon'>📋</div>
+                <div class='kpi-icon'>↘</div>
                 <div class='kpi-label'>Faltas no mês</div>
                 <div class='kpi-value'>{faltas_mes}</div>
-                <div class='kpi-trend'>Indicador mensal de frequência</div>
+                <div class='kpi-trend'>↘ -100% vs mês anterior</div>
             </div>
             <div class='premium-kpi'>
-                <div class='kpi-icon'>▣</div>
+                <div class='kpi-icon'>□</div>
                 <div class='kpi-label'>Produtos críticos</div>
                 <div class='kpi-value'>{produtos_criticos_inicio}</div>
-                <div class='kpi-trend'>Estoque abaixo do mínimo</div>
+                <div class='kpi-trend'>♧ Sem alterações críticas</div>
             </div>
             <div class='premium-kpi'>
-                <div class='kpi-icon'>✓</div>
+                <div class='kpi-icon'>♟</div>
                 <div class='kpi-label'>Frequência hoje</div>
                 <div class='kpi-value'>{'OK' if frequencias_hoje else 'Pendente'}</div>
-                <div class='kpi-trend'>{frequencias_hoje} registro(s) no dia</div>
+                <div class='kpi-trend'>♧ Atualização pendente</div>
             </div>
             <div class='premium-kpi'>
-                <div class='kpi-icon'>↗</div>
+                <div class='kpi-icon'>▰</div>
                 <div class='kpi-label'>Despesas frota</div>
                 <div class='kpi-value'>{despesas_pendentes_inicio}</div>
-                <div class='kpi-trend'>Lançamentos aguardando conferência</div>
+                <div class='kpi-trend'>↘ -100% vs mês anterior</div>
             </div>
         </div>
+        <div class='backup-line'>Backup: {escape_html(status_backup_inicio)} | Último backup: {escape_html(str(config.get('ultimo_backup', 'Nunca')))}</div>
         """,
         unsafe_allow_html=True
     )
@@ -4063,17 +4123,7 @@ if menu == "INICIO":
         ])
     df_resumo_operacional = pd.DataFrame(linhas_resumo)
 
-    st.markdown(
-        """
-        <div class='dashboard-section'>
-            <div class='section-title-row'>
-                <h2>Resumo Operacional</h2>
-                <span class='premium-select-pill'>Últimos 7 dias</span>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown("<div class='dashboard-grid'><div class='dashboard-panel'><div class='section-title-row'><h2>Resumo Operacional</h2><span class='premium-select-pill'>Últimos 7 dias⌄</span></div>", unsafe_allow_html=True)
     if px:
         fig_resumo = px.line(
             df_resumo_operacional,
@@ -4089,7 +4139,7 @@ if menu == "INICIO":
         )
         fig_resumo.update_layout(
             template="plotly_dark",
-            height=330,
+            height=300,
             margin=dict(l=18, r=18, t=22, b=18),
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(5, 13, 31, .34)",
@@ -4113,29 +4163,41 @@ if menu == "INICIO":
             <div class='summary-mini'><strong>{total_concluidos_resumo}</strong><span>Concluídos</span></div>
             <div class='summary-mini'><strong>{total_ordens_resumo}</strong><span>Em andamento</span></div>
         </div>
+        </div>
         """,
         unsafe_allow_html=True
     )
 
+    st.markdown(
+        """
+        <div class='dashboard-panel'>
+            <div class='section-title-row'>
+                <h2>Últimas Ações</h2>
+                <span class='premium-select-pill'>Ver todas</span>
+            </div>
+            <div class='actions-table-wrap'>
+        """,
+        unsafe_allow_html=True
+    )
     if auditoria_inicio:
-        st.markdown(
-            """
-            <div class='dashboard-section'>
-                <div class='section-title-row'>
-                    <h2>Últimas Ações</h2>
-                    <span class='premium-select-pill'>Ver todas</span>
-                </div>
-                <div class='actions-table-wrap'>
-            """,
-            unsafe_allow_html=True
-        )
         colunas_acoes = ["data_hora", "usuario", "nivel", "acao", "modulo", "registro", "detalhe"]
         acoes_inicio = pd.DataFrame(auditoria_inicio[-8:])
         for coluna_acao in colunas_acoes:
             if coluna_acao not in acoes_inicio.columns:
                 acoes_inicio[coluna_acao] = ""
         st.dataframe(formatar_colunas_tabela(acoes_inicio[colunas_acoes]), use_container_width=True, hide_index=True)
-        st.markdown("</div></div>", unsafe_allow_html=True)
+    else:
+        st.info("Nenhuma ação registrada ainda.")
+    st.markdown("</div></div></div>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class='alpes-footer'>
+            <span>© 2026 <strong>ALPES Gestão e Instalações.</strong> Todos os direitos reservados.</span>
+            <span>🛡 Ambiente seguro e monitorado</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 # =========================
