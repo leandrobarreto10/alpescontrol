@@ -1513,10 +1513,10 @@ if not st.session_state["autenticado"]:
             min-height: 100vh;
         }
         [data-testid="stMainBlockContainer"] {
-            max-width: 1180px !important;
+            max-width: 1360px !important;
             min-height: 100vh;
             margin: 0 auto !important;
-            padding: 5.2rem 2.2rem 2rem !important;
+            padding: 4.4rem 2.4rem 1.6rem !important;
         }
         [data-testid="stMainBlockContainer"] p,
         [data-testid="stMainBlockContainer"] label,
@@ -1542,20 +1542,22 @@ if not st.session_state["autenticado"]:
         .login-left-panel {
             position: relative;
             z-index: 1;
-            min-height: 630px;
+            min-height: 570px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding-right: 1.4rem;
+            padding: 1.1rem 1.8rem 0 0;
         }
         .login-logo-premium {
-            width: 132px;
-            height: 132px;
-            border-radius: 30px;
-            object-fit: cover;
-            border: 1px solid rgba(255,255,255,.22);
-            box-shadow: 0 26px 70px rgba(2, 8, 23, .42), 0 0 42px rgba(242, 140, 40, .18);
-            margin-bottom: 1.6rem;
+            width: min(330px, 82vw);
+            height: 126px;
+            object-fit: contain;
+            object-position: left center;
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+            filter: drop-shadow(0 28px 52px rgba(0,0,0,.36));
+            margin-bottom: 3rem;
         }
         .login-kicker {
             display: inline-flex;
@@ -1582,65 +1584,81 @@ if not st.session_state["autenticado"]:
             box-shadow: 0 0 24px rgba(242, 140, 40, .85);
         }
         .login-left-panel h1 {
-            margin: 1.2rem 0 .95rem;
-            max-width: 620px;
+            margin: 0 0 1rem;
+            max-width: 560px;
             color: #FFFFFF !important;
-            font-size: 4rem;
-            line-height: 1.02;
+            font-size: 2.25rem;
+            line-height: 1.22;
             font-weight: 900;
             letter-spacing: 0;
             text-shadow: 0 24px 80px rgba(2, 8, 23, .45);
         }
+        .login-left-panel h1 span {
+            color: #F28C28 !important;
+        }
+        .login-title-white {
+            color: #FFFFFF !important;
+        }
+        .login-title-orange {
+            color: #F28C28 !important;
+        }
         .login-orange-line {
-            width: 92px;
-            height: 5px;
+            width: 66px;
+            height: 3px;
             border-radius: 999px;
             background: linear-gradient(90deg, #F28C28, #FDBA74);
             box-shadow: 0 0 28px rgba(242, 140, 40, .62);
-            margin: .4rem 0 1.25rem;
+            margin: 1.4rem 0 1.25rem;
         }
         .login-copy {
-            max-width: 560px;
-            color: rgba(255,255,255,.78) !important;
-            font-size: 1.08rem;
-            line-height: 1.75;
+            max-width: 470px;
+            color: rgba(255,255,255,.84) !important;
+            font-size: 1.05rem;
+            line-height: 1.62;
         }
         .login-proof {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: .65rem;
-            margin-top: 2.4rem;
-            padding: .85rem;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+            margin-top: 1.6rem;
+            padding: 1rem;
             border-radius: 24px;
-            background: rgba(255,255,255,.085);
-            border: 1px solid rgba(255,255,255,.16);
-            box-shadow: 0 30px 90px rgba(2,8,23,.28);
+            background: rgba(3, 15, 35, .52);
+            border: 1px solid rgba(96, 165, 250, .28);
+            box-shadow: 0 30px 90px rgba(2,8,23,.34), inset 0 1px 0 rgba(255,255,255,.08);
             backdrop-filter: blur(20px);
         }
         .login-proof-item {
-            padding: .82rem .72rem;
+            min-height: 150px;
+            padding: 1rem;
             border-right: 1px solid rgba(255,255,255,.12);
+            border-radius: 18px;
+            background: linear-gradient(150deg, rgba(255,255,255,.07), rgba(255,255,255,.025));
         }
         .login-proof-item:last-child {
             border-right: 0;
         }
         .login-proof-icon {
             color: #F28C28;
-            font-size: 1rem;
-            margin-bottom: .34rem;
+            font-size: 1.1rem;
+            margin-bottom: .65rem;
         }
         .login-proof-number {
             color: #FFFFFF;
-            font-size: 1.38rem;
+            font-size: 1.05rem;
             font-weight: 900;
-            line-height: 1.1;
-        }
-        .login-proof-label {
-            color: rgba(255,255,255,.64);
-            font-size: .73rem;
-            font-weight: 700;
+            line-height: 1.18;
             text-transform: uppercase;
             letter-spacing: .04em;
+        }
+        .login-proof-label {
+            margin-top: .62rem;
+            color: rgba(255,255,255,.74);
+            font-size: .82rem;
+            font-weight: 600;
+            line-height: 1.45;
+            text-transform: none;
+            letter-spacing: 0;
         }
         .login-card-premium {
             position: relative;
@@ -1654,10 +1672,10 @@ if not st.session_state["autenticado"]:
             position: relative;
             z-index: 1;
             margin-top: 1rem;
-            padding: 2.1rem;
+            padding: 2.4rem;
             border-radius: 28px;
-            background: linear-gradient(145deg, rgba(8, 24, 52, .82), rgba(4, 12, 28, .62));
-            border: 1px solid rgba(255,255,255,.18);
+            background: linear-gradient(145deg, rgba(8, 24, 52, .76), rgba(4, 12, 28, .54));
+            border: 1px solid rgba(96, 165, 250, .30);
             box-shadow: 0 34px 110px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.15);
             backdrop-filter: blur(26px);
         }
@@ -1666,7 +1684,7 @@ if not st.session_state["autenticado"]:
         }
         .login-card-head h2 {
             color: #FFFFFF !important;
-            font-size: 1.9rem;
+            font-size: 2rem;
             line-height: 1.15;
             margin: 0 0 .35rem;
             font-weight: 900;
@@ -1753,11 +1771,12 @@ if not st.session_state["autenticado"]:
                 padding: 1rem 0 1.4rem;
             }
             .login-left-panel h1 {
-                font-size: 2.55rem;
+                font-size: 2.1rem;
             }
             .login-proof {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+                grid-template-columns: 1fr;
             }
+            .login-proof-item,
             .login-proof-item:nth-child(2) {
                 border-right: 0;
             }
@@ -1778,7 +1797,7 @@ if not st.session_state["autenticado"]:
         st.session_state["modo_acesso"] = "Desktop"
     elif st.session_state["modo_acesso"] == "Celular":
         st.session_state["modo_acesso"] = "Mobile"
-    colunas_login = [1.16, .84]
+    colunas_login = [1.02, .98]
     c1, c2 = st.columns(colunas_login, gap="large")
     with c1:
         logo_login = LOGIN_IMAGE if os.path.exists(LOGIN_IMAGE) else HOME_IMAGE
@@ -1794,35 +1813,15 @@ if not st.session_state["autenticado"]:
             f"""
             <section class='login-left-panel'>
                 {logo_html}
-                <div class='login-kicker'>Facilities Enterprise</div>
-                <h1>GESTÃO INTELIGENTE.<br>RESULTADOS REAIS.</h1>
-                <div class='login-orange-line'></div>
+                <h1>
+                    <span class='login-title-white'>GESTÃO INTELIGENTE.</span><br>
+                    <span class='login-title-orange'>RESULTADOS REAIS.</span>
+                </h1>
                 <p class='login-copy'>
                     A plataforma completa para gestão de facilities, equipes e operações,
                     centralizando tudo em um só lugar.
                 </p>
-                <div class='login-proof'>
-                    <div class='login-proof-item'>
-                        <div class='login-proof-icon'>◆</div>
-                        <div class='login-proof-number'>52</div>
-                        <div class='login-proof-label'>Clientes ativos</div>
-                    </div>
-                    <div class='login-proof-item'>
-                        <div class='login-proof-icon'>◆</div>
-                        <div class='login-proof-number'>1.284</div>
-                        <div class='login-proof-label'>Chamados finalizados</div>
-                    </div>
-                    <div class='login-proof-item'>
-                        <div class='login-proof-icon'>◆</div>
-                        <div class='login-proof-number'>98%</div>
-                        <div class='login-proof-label'>SLA de atendimento</div>
-                    </div>
-                    <div class='login-proof-item'>
-                        <div class='login-proof-icon'>◆</div>
-                        <div class='login-proof-number'>24</div>
-                        <div class='login-proof-label'>Equipes em campo</div>
-                    </div>
-                </div>
+                <div class='login-orange-line'></div>
             </section>
             """,
             unsafe_allow_html=True
@@ -1922,6 +1921,36 @@ if not st.session_state["autenticado"]:
             """,
             unsafe_allow_html=True
         )
+    st.markdown(
+        """
+        <div class='login-proof'>
+            <div class='login-proof-item'>
+                <div class='login-proof-icon'>◆</div>
+                <div class='login-proof-number'>Missão</div>
+                <div class='login-proof-label'>
+                    Fornecer soluções de terceirização de serviços que impulsionam
+                    as empresas parceiras a novos níveis de sucesso.
+                </div>
+            </div>
+            <div class='login-proof-item'>
+                <div class='login-proof-icon'>◆</div>
+                <div class='login-proof-number'>Visão</div>
+                <div class='login-proof-label'>
+                    Ser referência na terceirização de serviços na iniciativa privada,
+                    baseada em cultura central: a parceria.
+                </div>
+            </div>
+            <div class='login-proof-item'>
+                <div class='login-proof-icon'>◆</div>
+                <div class='login-proof-number'>Valores</div>
+                <div class='login-proof-label'>
+                    Honestidade; Compromisso; Transparência; Sinergia; Humildade.
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
     st.stop()
 
 
