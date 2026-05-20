@@ -6089,10 +6089,11 @@ elif menu == "CONFIGURAÇÕES":
                 with st.form("criar_usuario"):
                     if nivel in ["Responsável Frota", "Motorista"]:
                         if responsaveis_frota:
-                            nome = st.selectbox("Nome", responsaveis_frota)
+                            opcoes_responsavel_usuario = ["Informar Manualmente"] + responsaveis_frota
+                            nome_opcao = st.selectbox("Nome", opcoes_responsavel_usuario)
+                            nome = nome_opcao if nome_opcao != "Informar Manualmente" else st.text_input("Nome do usuário").strip().title()
                         else:
-                            nome = ""
-                            st.info("Cadastre o responsável no veículo em Frotas antes de criar este usuário.")
+                            nome = st.text_input("Nome")
                     else:
                         nome = st.text_input("Nome")
                     email_user = st.text_input("Email")
@@ -6117,10 +6118,6 @@ elif menu == "CONFIGURAÇÕES":
                         email_existe = bool(email_user) and any(u.get("email", "").lower() == email_user.lower() for u in usuarios)
                         if not nome or not senha:
                             st.error("Informe nome e senha.")
-                        elif nivel in ["Responsável Frota", "Motorista"] and not responsaveis_frota:
-                            st.error("Cadastre o responsável no veículo em Frotas antes de criar este usuário.")
-                        elif (nivel in ["Responsável Frota", "Motorista"] or pode_lancar_despesa_frota) and not veiculos_frota:
-                            st.error("Selecione pelo menos um veículo liberado para lançamento de despesas.")
                         elif nome_existe:
                             st.error("Já existe um usuário com esse nome.")
                         elif email_existe:
