@@ -347,6 +347,42 @@ def google_drive_configurado():
     )
 
 
+def ambiente_streamlit_cloud():
+    cwd = os.getcwd().replace("\\", "/").lower()
+    return bool(
+        os.environ.get("STREAMLIT_CLOUD")
+        or os.environ.get("STREAMLIT_SHARING")
+        or cwd.startswith("/mount/src")
+        or "/mount/src/" in cwd
+    )
+
+
+def armazenamento_persistente_configurado():
+    return bool(supabase_configurado() or google_drive_configurado())
+
+
+def exigir_armazenamento_persistente_online():
+    valor = str(obter_config_secreta("ALPES_EXIGIR_ARMAZENAMENTO_ONLINE", "")).strip().lower()
+    if valor:
+        return valor in {"1", "true", "sim", "yes", "on"}
+    return ambiente_streamlit_cloud()
+
+
+def bloquear_gravacao_sem_armazenamento(caminho):
+    if not exigir_armazenamento_persistente_online() or armazenamento_persistente_configurado():
+        return
+    nome = os.path.basename(str(caminho or ""))
+    arquivos_dados = set(SUPABASE_ARQUIVO_TABELA.keys()) | set(SUPABASE_JSON_TABELA.keys()) | {"configuracoes.json"}
+    if nome not in arquivos_dados:
+        return
+    st.error(
+        "Armazenamento persistente não configurado. "
+        "Para usar o sistema online sem perder dados, configure SUPABASE_URL, "
+        "SUPABASE_SERVICE_ROLE_KEY e SUPABASE_BUCKET nos Secrets do Streamlit."
+    )
+    st.stop()
+
+
 def obter_google_oauth_info():
     info = {
         "client_id": os.environ.get("GOOGLE_OAUTH_CLIENT_ID", ""),
@@ -669,6 +705,8 @@ if not hasattr(pd.DataFrame, "_alpes_to_excel_original"):
 def dataframe_to_excel_com_armazenamento(self, excel_writer, *args, **kwargs):
     if isinstance(excel_writer, (str, os.PathLike)):
         caminho_excel = os.path.abspath(os.fspath(excel_writer))
+        if "bloquear_gravacao_sem_armazenamento" in globals():
+            bloquear_gravacao_sem_armazenamento(caminho_excel)
         usuario_atual = st.session_state.get("usuario_logado", {})
         perfil_consulta = (
             globals().get("usuario_somente_consulta", lambda usuario: isinstance(usuario, dict) and usuario.get("nivel") == "Consulta")
@@ -756,6 +794,7 @@ def carregar_json(caminho, padrao):
 
 
 def salvar_json(caminho, dados):
+    bloquear_gravacao_sem_armazenamento(caminho)
     with open(caminho, "w", encoding="utf-8") as arquivo:
         json.dump(dados, arquivo, ensure_ascii=False, indent=4)
     supabase_salvar_json(caminho, dados)
