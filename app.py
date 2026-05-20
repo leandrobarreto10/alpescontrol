@@ -1120,9 +1120,16 @@ st.markdown(f"""
         max-width: 1440px;
     }}
     #MainMenu,
+    header,
+    [data-testid="stHeader"],
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"],
+    [data-testid="stStatusWidget"],
+    [data-testid="stAppDeployButton"],
     footer {{
         display: none !important;
         visibility: hidden !important;
+        height: 0 !important;
     }}
     [data-testid="stException"],
     [data-testid="stException"] * {{
@@ -1470,7 +1477,7 @@ st.markdown(f"""
     [data-testid="stMainBlockContainer"] {{
         position: relative;
         z-index: 1;
-        padding-top: 1.1rem;
+        padding-top: 0 !important;
         max-width: 1480px;
     }}
     h1, h2, h3, h4, h5, h6 {{
@@ -1545,7 +1552,7 @@ st.markdown(f"""
         justify-content: space-between;
         gap: 18px;
         padding: 14px 18px;
-        margin: -1.1rem -1rem 22px -1rem;
+        margin: 0 -1rem 22px -1rem;
         min-height: 76px;
         border-bottom: 1px solid rgba(148, 163, 184, .15);
         background: rgba(5, 13, 31, .34);
