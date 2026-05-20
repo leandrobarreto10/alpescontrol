@@ -6546,7 +6546,12 @@ elif menu == "FROTAS":
 
     elif subtela_frotas == "VEÍCULOS":
         st.subheader("Veículos")
-        acao_veiculo = st.radio("Ação", ["Adicionar", "Editar", "Inativar"], horizontal=True)
+        acao_veiculo = st.radio(
+            "Ação",
+            ["Adicionar", "Editar", "Inativar"],
+            horizontal=True,
+            label_visibility="collapsed"
+        )
         if acao_veiculo == "Adicionar":
             placa = st.text_input("Placa").strip().upper()
             modelo = st.text_input("Modelo").strip().title()
