@@ -1490,75 +1490,366 @@ if st.session_state.get("login_salvo_modo") in ["Desktop", "Mobile"]:
     st.session_state["modo_acesso"] = st.session_state["login_salvo_modo"]
 
 if not st.session_state["autenticado"]:
+    DESK_IMAGE = os.path.join(PASTA_IMAGENS_SISTEMA, "desk.jpg")
+    imagem_fundo_login = DESK_IMAGE if os.path.exists(DESK_IMAGE) else HOME_IMAGE
+    if not os.path.exists(imagem_fundo_login):
+        imagem_fundo_login = LOGIN_IMAGE if os.path.exists(LOGIN_IMAGE) else HOME_IMAGE_FALLBACK
+    css_fundo_login = "linear-gradient(135deg, #061C3F 0%, #0B1F3A 52%, #020817 100%)"
+    if os.path.exists(imagem_fundo_login):
+        extensao_fundo = os.path.splitext(imagem_fundo_login)[1].lower().replace(".", "")
+        mime_fundo = "jpeg" if extensao_fundo in ["jpg", "jpeg"] else "png"
+        css_fundo_login = (
+            "linear-gradient(115deg, rgba(6, 28, 63, .96) 0%, rgba(6, 28, 63, .90) 42%, "
+            "rgba(2, 8, 23, .78) 100%), "
+            "radial-gradient(circle at 18% 18%, rgba(242, 140, 40, .25), transparent 28rem), "
+            f"url('data:image/{mime_fundo};base64,{imagem_base64(imagem_fundo_login)}') center/cover no-repeat"
+        )
+
     st.markdown(
         """
         <style>
         .stApp {
-            background:
-                linear-gradient(135deg, rgba(11, 31, 58, .96), rgba(11, 31, 58, .82)),
-                radial-gradient(circle at 25% 15%, rgba(249, 115, 22, .28), transparent 24rem),
-                linear-gradient(135deg, #0B1F3A, #071426) !important;
+            background: __CSS_FUNDO_LOGIN__ !important;
+            min-height: 100vh;
         }
         [data-testid="stMainBlockContainer"] {
-            max-width: 520px !important;
-            margin: 6vh auto 4vh auto;
-            background: rgba(255, 255, 255, .96);
-            border: 1px solid rgba(255, 255, 255, .24);
-            border-radius: 8px;
-            box-shadow: 0 30px 90px rgba(2, 6, 23, .42);
-            backdrop-filter: blur(10px);
-            padding: 1.4rem 2rem !important;
+            max-width: 1180px !important;
+            min-height: 100vh;
+            margin: 0 auto !important;
+            padding: 5.2rem 2.2rem 2rem !important;
         }
         [data-testid="stMainBlockContainer"] p,
         [data-testid="stMainBlockContainer"] label,
         [data-testid="stMainBlockContainer"] [data-testid="stMarkdownContainer"],
         [data-testid="stMainBlockContainer"] [data-testid="stWidgetLabel"],
         [data-testid="stMainBlockContainer"] [data-testid="stCaptionContainer"] {
-            color: #0F172A !important;
+            color: rgba(255, 255, 255, .86) !important;
         }
         [data-testid="stMainBlockContainer"] button p {
             color: #FFFFFF !important;
         }
+        .login-shell-marker {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px),
+                linear-gradient(0deg, rgba(255,255,255,.04) 1px, transparent 1px);
+            background-size: 84px 84px;
+            mask-image: linear-gradient(120deg, rgba(0,0,0,.75), transparent 72%);
+            z-index: 0;
+        }
+        .login-left-panel {
+            position: relative;
+            z-index: 1;
+            min-height: 630px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-right: 1.4rem;
+        }
+        .login-logo-premium {
+            width: 132px;
+            height: 132px;
+            border-radius: 30px;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,.22);
+            box-shadow: 0 26px 70px rgba(2, 8, 23, .42), 0 0 42px rgba(242, 140, 40, .18);
+            margin-bottom: 1.6rem;
+        }
+        .login-kicker {
+            display: inline-flex;
+            width: fit-content;
+            align-items: center;
+            gap: .6rem;
+            padding: .56rem .9rem;
+            border: 1px solid rgba(255,255,255,.16);
+            border-radius: 999px;
+            background: rgba(255,255,255,.08);
+            color: rgba(255,255,255,.86);
+            font-size: .78rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            backdrop-filter: blur(18px);
+        }
+        .login-kicker::before {
+            content: "";
+            width: .5rem;
+            height: .5rem;
+            border-radius: 999px;
+            background: #F28C28;
+            box-shadow: 0 0 24px rgba(242, 140, 40, .85);
+        }
+        .login-left-panel h1 {
+            margin: 1.2rem 0 .95rem;
+            max-width: 620px;
+            color: #FFFFFF !important;
+            font-size: 4rem;
+            line-height: 1.02;
+            font-weight: 900;
+            letter-spacing: 0;
+            text-shadow: 0 24px 80px rgba(2, 8, 23, .45);
+        }
+        .login-orange-line {
+            width: 92px;
+            height: 5px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #F28C28, #FDBA74);
+            box-shadow: 0 0 28px rgba(242, 140, 40, .62);
+            margin: .4rem 0 1.25rem;
+        }
+        .login-copy {
+            max-width: 560px;
+            color: rgba(255,255,255,.78) !important;
+            font-size: 1.08rem;
+            line-height: 1.75;
+        }
+        .login-proof {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: .65rem;
+            margin-top: 2.4rem;
+            padding: .85rem;
+            border-radius: 24px;
+            background: rgba(255,255,255,.085);
+            border: 1px solid rgba(255,255,255,.16);
+            box-shadow: 0 30px 90px rgba(2,8,23,.28);
+            backdrop-filter: blur(20px);
+        }
+        .login-proof-item {
+            padding: .82rem .72rem;
+            border-right: 1px solid rgba(255,255,255,.12);
+        }
+        .login-proof-item:last-child {
+            border-right: 0;
+        }
+        .login-proof-icon {
+            color: #F28C28;
+            font-size: 1rem;
+            margin-bottom: .34rem;
+        }
+        .login-proof-number {
+            color: #FFFFFF;
+            font-size: 1.38rem;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+        .login-proof-label {
+            color: rgba(255,255,255,.64);
+            font-size: .73rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+        .login-card-premium {
+            position: relative;
+            z-index: 1;
+            margin: 0;
+        }
+        .login-card-premium::before {
+            content: none;
+        }
+        [data-testid="stMainBlockContainer"] > div > div > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) > div {
+            position: relative;
+            z-index: 1;
+            margin-top: 1rem;
+            padding: 2.1rem;
+            border-radius: 28px;
+            background: linear-gradient(145deg, rgba(8, 24, 52, .82), rgba(4, 12, 28, .62));
+            border: 1px solid rgba(255,255,255,.18);
+            box-shadow: 0 34px 110px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.15);
+            backdrop-filter: blur(26px);
+        }
+        .login-card-head {
+            margin-bottom: 1.2rem;
+        }
+        .login-card-head h2 {
+            color: #FFFFFF !important;
+            font-size: 1.9rem;
+            line-height: 1.15;
+            margin: 0 0 .35rem;
+            font-weight: 900;
+        }
+        .login-card-head p {
+            color: rgba(255,255,255,.64) !important;
+            margin: 0;
+            font-size: .98rem;
+        }
+        .login-access-label {
+            color: rgba(255,255,255,.64);
+            font-size: .78rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin: .4rem 0 .55rem;
+        }
+        .login-secure-footer {
+            margin-top: 1.35rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,.12);
+            color: rgba(255,255,255,.62);
+            text-align: center;
+            font-size: .78rem;
+            line-height: 1.7;
+        }
+        .login-forgot a {
+            display: inline-block;
+            margin: -.15rem 0 .45rem;
+            color: #FDBA74 !important;
+            font-size: .86rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .login-forgot a:hover {
+            color: #FFFFFF !important;
+            text-shadow: 0 0 18px rgba(242,140,40,.55);
+        }
+        div[data-testid="stTextInput"] input {
+            min-height: 3.08rem;
+            border-radius: 16px !important;
+            background: rgba(3, 10, 24, .48) !important;
+            border: 1px solid rgba(255,255,255,.16) !important;
+            color: #FFFFFF !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+        }
+        div[data-testid="stTextInput"] input::placeholder {
+            color: rgba(255,255,255,.42) !important;
+        }
+        div[data-testid="stTextInput"] input:focus {
+            border-color: rgba(242, 140, 40, .78) !important;
+            box-shadow: 0 0 0 4px rgba(242, 140, 40, .14) !important;
+        }
+        div[data-testid="stCheckbox"] label {
+            color: rgba(255,255,255,.72) !important;
+            font-weight: 700;
+        }
+        div[data-testid="stButton"] button {
+            min-height: 3.05rem;
+            border-radius: 16px !important;
+            border: 1px solid rgba(255,255,255,.14) !important;
+            background: rgba(255,255,255,.08) !important;
+            color: #FFFFFF !important;
+            font-weight: 900 !important;
+            box-shadow: 0 18px 45px rgba(2,8,23,.22);
+            transition: all .22s ease;
+        }
+        div[data-testid="stButton"] button:hover {
+            transform: translateY(-1px);
+            border-color: rgba(242, 140, 40, .55) !important;
+            box-shadow: 0 20px 60px rgba(242,140,40,.18);
+        }
+        div[data-testid="stButton"] button[kind="primary"] {
+            background: linear-gradient(135deg, #F28C28, #F97316) !important;
+            border-color: rgba(253, 186, 116, .72) !important;
+            box-shadow: 0 18px 54px rgba(242, 140, 40, .34), 0 0 0 1px rgba(255,255,255,.08) inset;
+        }
+        @media (max-width: 900px) {
+            [data-testid="stMainBlockContainer"] {
+                padding: 2rem 1rem !important;
+            }
+            .login-left-panel {
+                min-height: auto;
+                padding: 1rem 0 1.4rem;
+            }
+            .login-left-panel h1 {
+                font-size: 2.55rem;
+            }
+            .login-proof {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .login-proof-item:nth-child(2) {
+                border-right: 0;
+            }
+            .login-card-premium {
+                border-radius: 22px;
+            }
+            [data-testid="stMainBlockContainer"] > div > div > div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) > div {
+                padding: 1.35rem;
+                border-radius: 22px;
+            }
+        }
         </style>
         <div class='login-shell-marker'></div>
-        """,
+        """.replace("__CSS_FUNDO_LOGIN__", css_fundo_login),
         unsafe_allow_html=True
     )
     if st.session_state["modo_acesso"] == "Computador":
         st.session_state["modo_acesso"] = "Desktop"
     elif st.session_state["modo_acesso"] == "Celular":
         st.session_state["modo_acesso"] = "Mobile"
-    colunas_login = [0.001, 1, 0.001]
-    c1, c2, c3 = st.columns(colunas_login)
-    with c2:
-        imagem_login = LOGIN_IMAGE if os.path.exists(LOGIN_IMAGE) else HOME_IMAGE_FALLBACK
-        if os.path.exists(imagem_login):
-            extensao = os.path.splitext(imagem_login)[1].lower().replace(".", "")
-            mime = "jpeg" if extensao in ["jpg", "jpeg"] else "png"
-            st.markdown(
-                f"<img src='data:image/{mime};base64,{imagem_base64(imagem_login)}' class='login-img'>",
-                unsafe_allow_html=True
+    colunas_login = [1.16, .84]
+    c1, c2 = st.columns(colunas_login, gap="large")
+    with c1:
+        logo_login = LOGIN_IMAGE if os.path.exists(LOGIN_IMAGE) else HOME_IMAGE
+        logo_html = ""
+        if os.path.exists(logo_login):
+            extensao_logo = os.path.splitext(logo_login)[1].lower().replace(".", "")
+            mime_logo = "jpeg" if extensao_logo in ["jpg", "jpeg"] else "png"
+            logo_html = (
+                f"<img src='data:image/{mime_logo};base64,{imagem_base64(logo_login)}' "
+                "class='login-logo-premium' alt='ALPES'>"
             )
         st.markdown(
+            f"""
+            <section class='login-left-panel'>
+                {logo_html}
+                <div class='login-kicker'>Facilities Enterprise</div>
+                <h1>GESTÃO INTELIGENTE.<br>RESULTADOS REAIS.</h1>
+                <div class='login-orange-line'></div>
+                <p class='login-copy'>
+                    A plataforma completa para gestão de facilities, equipes e operações,
+                    centralizando tudo em um só lugar.
+                </p>
+                <div class='login-proof'>
+                    <div class='login-proof-item'>
+                        <div class='login-proof-icon'>◆</div>
+                        <div class='login-proof-number'>52</div>
+                        <div class='login-proof-label'>Clientes ativos</div>
+                    </div>
+                    <div class='login-proof-item'>
+                        <div class='login-proof-icon'>◆</div>
+                        <div class='login-proof-number'>1.284</div>
+                        <div class='login-proof-label'>Chamados finalizados</div>
+                    </div>
+                    <div class='login-proof-item'>
+                        <div class='login-proof-icon'>◆</div>
+                        <div class='login-proof-number'>98%</div>
+                        <div class='login-proof-label'>SLA de atendimento</div>
+                    </div>
+                    <div class='login-proof-item'>
+                        <div class='login-proof-icon'>◆</div>
+                        <div class='login-proof-number'>24</div>
+                        <div class='login-proof-label'>Equipes em campo</div>
+                    </div>
+                </div>
+            </section>
+            """,
+            unsafe_allow_html=True
+        )
+    with c2:
+        st.markdown(
             """
-            <div class='login-brand'>
-                <div class='login-brand-title'>ALPES</div>
-                <div class='login-brand-subtitle'>Gestão e Facilities | Plataforma Corporativa</div>
+            <div class='login-card-premium'>
+                <div class='login-card-head'>
+                    <h2>Bem-vindo à ALPES</h2>
+                    <p>Acesse sua conta para continuar</p>
+                </div>
+                <div class='login-access-label'>Selecione o tipo de acesso</div>
             </div>
             """,
             unsafe_allow_html=True
         )
-        st.caption("Forma de acesso")
         acesso_mobile, acesso_desktop = st.columns(2)
         if acesso_mobile.button(
-            "Mobile",
+            "Acesso Mobile",
             use_container_width=True,
             type="primary" if st.session_state["modo_acesso"] == "Mobile" else "secondary"
         ):
             st.session_state["modo_acesso"] = "Mobile"
             st.rerun()
         if acesso_desktop.button(
-            "Desktop",
+            "Acesso Corporativo",
             use_container_width=True,
             type="primary" if st.session_state["modo_acesso"] == "Desktop" else "secondary"
         ):
@@ -1566,16 +1857,25 @@ if not st.session_state["autenticado"]:
             st.rerun()
         usuario_login = st.text_input(
             "Usuário ou email",
-            value=st.session_state.get("login_salvo_usuario", "")
+            value=st.session_state.get("login_salvo_usuario", ""),
+            placeholder="Digite seu usuário ou email"
         )
         mostrar_senha = st.checkbox("Mostrar senha")
-        senha_login = st.text_input("Senha", type="default" if mostrar_senha else "password")
+        senha_login = st.text_input(
+            "Senha",
+            type="default" if mostrar_senha else "password",
+            placeholder="Digite sua senha"
+        )
+        st.markdown(
+            "<div class='login-forgot'><a href='#'>Esqueceu sua senha?</a></div>",
+            unsafe_allow_html=True
+        )
         salvar_login = st.checkbox(
             "Salvar login",
             value=bool(st.session_state.get("login_salvo_ativo", False)),
             help="Salva o usuário/email e mantém a sessão neste navegador. A senha não fica gravada."
         )
-        if st.button("Entrar", use_container_width=True):
+        if st.button("ENTRAR", use_container_width=True, type="primary"):
             usuarios = garantir_usuario_admin()
             usuario_encontrado = next(
                 (
@@ -1613,6 +1913,15 @@ if not st.session_state["autenticado"]:
                 st.rerun()
             else:
                 st.error("Login inválido. Verifique usuário/email e senha.")
+        st.markdown(
+            """
+            <div class='login-secure-footer'>
+                © 2026 ALPES Gestão e Facilities. Todos os direitos reservados.<br>
+                Ambiente seguro e monitorado
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
     st.stop()
 
 
