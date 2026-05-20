@@ -733,6 +733,7 @@ UNIDADES_JSON = caminho_dados("unidades.json")
 BACKUP_DIR = caminho_dados("backups")
 HOME_IMAGE = os.path.join(PASTA_IMAGENS_SISTEMA, "inicio.jpg")
 LOGIN_IMAGE = os.path.join(PASTA_IMAGENS_SISTEMA, "login.jpg")
+LOGIN_LOGO_IMAGE = os.path.join(PASTA_IMAGENS_SISTEMA, "logo_alpes_horizontal_negativo.png")
 HOME_IMAGE_FALLBACK = os.path.join(BASE_DIR, "Desktop 1.jpg")
 BASES_FREQUENCIA = ["TMG BASE SORRISO", "TMG BASE RONDONOPOLIS"]
 sincronizar_armazenamento_inicio()
@@ -1548,30 +1549,12 @@ if not st.session_state["autenticado"]:
             justify-content: center;
             padding: .5rem 1.7rem 0 0;
         }
-        .login-wordmark {
-            display: inline-flex;
-            width: fit-content;
-            align-items: center;
-            gap: .95rem;
-            margin-bottom: 1.8rem;
-            filter: drop-shadow(0 28px 52px rgba(0,0,0,.36));
-        }
-        .login-mark {
-            width: 72px;
-            height: 72px;
-            display: grid;
-            place-items: center;
-            color: #F28C28;
-            font-size: 4.1rem;
-            font-weight: 900;
-            line-height: 1;
-        }
-        .login-word {
-            color: #FFFFFF !important;
-            font-size: 3.2rem;
-            line-height: 1;
-            font-weight: 900;
-            letter-spacing: .05em;
+        .login-brand-logo {
+            width: min(430px, 86vw);
+            height: auto;
+            display: block;
+            margin: 0 0 2rem;
+            filter: drop-shadow(0 28px 52px rgba(0,0,0,.38));
         }
         .login-logo-premium {
             width: min(330px, 82vw);
@@ -1793,13 +1776,9 @@ if not st.session_state["autenticado"]:
                 min-height: auto;
                 padding: 1rem 0 1.4rem;
             }
-            .login-word {
-                font-size: 2.4rem;
-            }
-            .login-mark {
-                width: 58px;
-                height: 58px;
-                font-size: 3.35rem;
+            .login-brand-logo {
+                width: min(330px, 86vw);
+                margin-bottom: 1.3rem;
             }
             .login-left-panel h1 {
                 font-size: 2.1rem;
@@ -1831,13 +1810,18 @@ if not st.session_state["autenticado"]:
     colunas_login = [1.02, .98]
     c1, c2 = st.columns(colunas_login, gap="large")
     with c1:
+        logo_login_html = ""
+        if os.path.exists(LOGIN_LOGO_IMAGE):
+            extensao_logo = os.path.splitext(LOGIN_LOGO_IMAGE)[1].lower().replace(".", "")
+            mime_logo = "jpeg" if extensao_logo in ["jpg", "jpeg"] else "png"
+            logo_login_html = (
+                f"<img src='data:image/{mime_logo};base64,{imagem_base64(LOGIN_LOGO_IMAGE)}' "
+                "class='login-brand-logo' alt='ALPES Gestão e Facilities'>"
+            )
         st.markdown(
-            """
+            f"""
             <section class='login-left-panel'>
-                <div class='login-wordmark'>
-                    <div class='login-mark'>A</div>
-                    <div class='login-word'>ALPES</div>
-                </div>
+                {logo_login_html}
                 <h1>
                     <span class='login-title-white'>GESTÃO INTELIGENTE.</span><br>
                     <span class='login-title-orange'>RESULTADOS REAIS.</span>
