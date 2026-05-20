@@ -1376,12 +1376,6 @@ st.markdown(f"""
     .stButton > button:active, .stDownloadButton button:active, button[kind="primary"]:active, button[kind="secondary"]:active {{
         transform: translateY(1px);
     }}
-    .stButton > button p,
-    .stDownloadButton button p,
-    button[kind="primary"] p,
-    button[kind="secondary"] p {{
-        color: #FFFFFF !important;
-    }}
     div[data-baseweb="input"] > div,
     div[data-baseweb="select"] > div,
     textarea,
