@@ -917,6 +917,37 @@ def arquivo_raiz_permitido_backup(nome):
     return os.path.splitext(nome)[1].lower() in extensoes
 
 
+def gerar_backup_incremental(caminho_alterado):
+    caminho_origem = os.path.abspath(os.fspath(caminho_alterado or ""))
+    data_dir_abs = os.path.abspath(DATA_DIR)
+    if not caminho_origem or not os.path.exists(caminho_origem):
+        return ""
+    if os.path.commonpath([data_dir_abs, caminho_origem]) != data_dir_abs:
+        return ""
+    if os.path.abspath(caminho_origem).startswith(os.path.abspath(BACKUP_DIR)):
+        return ""
+    nome_arquivo = os.path.basename(caminho_origem)
+    if nome_arquivo not in arquivos_permitidos_backup() and not arquivo_raiz_permitido_backup(nome_arquivo):
+        return ""
+
+    pasta_incremental = os.path.join(BACKUP_DIR, "incremental", datetime.now().strftime("%Y%m%d"))
+    os.makedirs(pasta_incremental, exist_ok=True)
+    nome_base, extensao = os.path.splitext(nome_arquivo)
+    carimbo = datetime.now().strftime("%H%M%S_%f")[:-3]
+    destino = os.path.join(pasta_incremental, f"{nome_base}_{carimbo}{extensao}")
+    shutil.copy2(caminho_origem, destino)
+
+    try:
+        upload_arquivo_remoto(destino)
+    except Exception as erro:
+        st.session_state["erro_backup_incremental"] = str(erro)[:700]
+    else:
+        st.session_state.pop("erro_backup_incremental", None)
+
+    st.session_state["ultimo_backup_incremental"] = destino
+    return destino
+
+
 def restaurar_backup_zip(caminho_zip):
     ignorar_pastas_restore = {"backups", "__pycache__", ".git", ".venv", "venv"}
     with zipfile.ZipFile(caminho_zip, "r") as zip_ref:
@@ -947,8 +978,26 @@ def marcar_backup_pendente(caminho=""):
     config["alteracao_pendente_backup"] = True
     config["ultima_alteracao"] = datetime.now().strftime("%d/%m/%Y %H:%M")
     salvar_config_sem_marcar_backup()
+
     if (
-        config.get("backup_automatico_alteracao", True)
+        config.get("backup_incremental_alteracao", True)
+        and caminho
+        and "gerar_backup_incremental" in globals()
+        and not st.session_state.get("backup_incremental_em_execucao")
+        and not st.session_state.get("salvando_backup")
+    ):
+        st.session_state["backup_incremental_em_execucao"] = True
+        try:
+            caminho_incremental = gerar_backup_incremental(caminho)
+            if caminho_incremental and "registrar_auditoria" in globals():
+                registrar_auditoria("BACKUP_INCREMENTAL", "BACKUP", caminho_incremental, os.path.basename(caminho_incremental))
+        except Exception as erro:
+            st.session_state["erro_backup_incremental"] = str(erro)[:700]
+        finally:
+            st.session_state.pop("backup_incremental_em_execucao", None)
+
+    if (
+        config.get("backup_completo_alteracao", False)
         and "gerar_backup" in globals()
         and not st.session_state.get("backup_automatico_em_execucao")
         and not st.session_state.get("salvando_backup")
@@ -1031,6 +1080,8 @@ def configuracao_padrao():
         "ultimo_backup": "Nunca",
         "backup_automatico_diario": True,
         "backup_automatico_alteracao": True,
+        "backup_incremental_alteracao": True,
+        "backup_completo_alteracao": False,
         "backup_google_drive_ativo": True,
         "backup_google_drive_pasta": "",
         "ultimo_backup_google_drive": "Nunca",
@@ -7288,13 +7339,24 @@ elif menu == "CONFIGURAÇÕES":
             registrar_auditoria("CONFIGURAR", "BACKUP", f"Backup automático diário: {backup_auto}", "backup_automatico_diario")
             st.rerun()
         backup_auto_alteracao = st.toggle(
-            "Gerar backup automaticamente a cada alteração",
-            value=bool(config.get("backup_automatico_alteracao", True))
+            "Backup rápido a cada alteração de dados",
+            value=bool(config.get("backup_incremental_alteracao", True)),
+            help="Salva uma cópia apenas do arquivo alterado, com data e hora. É mais rápido que gerar um backup completo."
         )
-        if backup_auto_alteracao != bool(config.get("backup_automatico_alteracao", True)):
-            config["backup_automatico_alteracao"] = bool(backup_auto_alteracao)
+        if backup_auto_alteracao != bool(config.get("backup_incremental_alteracao", True)):
+            config["backup_incremental_alteracao"] = bool(backup_auto_alteracao)
             salvar_json(CONFIG_JSON, config)
-            registrar_auditoria("CONFIGURAR", "BACKUP", f"Backup por alteração: {backup_auto_alteracao}", "backup_automatico_alteracao")
+            registrar_auditoria("CONFIGURAR", "BACKUP", f"Backup rápido por alteração: {backup_auto_alteracao}", "backup_incremental_alteracao")
+            st.rerun()
+        backup_completo_alteracao = st.toggle(
+            "Backup completo a cada alteração (mais lento)",
+            value=bool(config.get("backup_completo_alteracao", False)),
+            help="Compacta o sistema inteiro a cada alteração. Use somente se precisar, pois pode deixar o sistema lento."
+        )
+        if backup_completo_alteracao != bool(config.get("backup_completo_alteracao", False)):
+            config["backup_completo_alteracao"] = bool(backup_completo_alteracao)
+            salvar_json(CONFIG_JSON, config)
+            registrar_auditoria("CONFIGURAR", "BACKUP", f"Backup completo por alteração: {backup_completo_alteracao}", "backup_completo_alteracao")
             st.rerun()
         backup_drive_ativo = st.toggle("Copiar backup para OneDrive / Google Drive", value=bool(config.get("backup_google_drive_ativo", True)))
         pasta_drive_atual = obter_pasta_backup_nuvem()
@@ -7314,6 +7376,12 @@ elif menu == "CONFIGURAÇÕES":
         erro_backup_alteracao = st.session_state.get("erro_backup_automatico_alteracao", "")
         if erro_backup_alteracao:
             st.warning(f"Backup automático por alteração falhou: {erro_backup_alteracao}")
+        erro_backup_incremental = st.session_state.get("erro_backup_incremental", "")
+        if erro_backup_incremental:
+            st.warning(f"Backup rápido por alteração falhou: {erro_backup_incremental}")
+        ultimo_incremental = st.session_state.get("ultimo_backup_incremental", "")
+        if ultimo_incremental:
+            st.caption(f"Último backup rápido: {ultimo_incremental}")
         if config.get("alteracao_pendente_backup", False):
             st.warning(f"Backup pendente desde: {config.get('ultima_alteracao', 'alteracao recente')}")
         else:
