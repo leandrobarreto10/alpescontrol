@@ -262,6 +262,103 @@ create table if not exists configuracoes (
     updated_at timestamptz default now()
 );
 
+create table if not exists logs (
+    id text primary key,
+    data_hora text,
+    usuario text,
+    nivel text,
+    acao text,
+    modulo text,
+    registro text,
+    detalhe text,
+    antes text,
+    depois text,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists compras (
+    id text primary key,
+    data text,
+    fornecedor text,
+    produto text,
+    quantidade numeric default 0,
+    valor_unitario numeric default 0,
+    valor_total numeric default 0,
+    status text,
+    observacoes text,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists relatorios (
+    id text primary key,
+    tipo text,
+    periodo text,
+    usuario text,
+    parametros jsonb default '{}'::jsonb,
+    arquivo text,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists historicos (
+    id text primary key,
+    entidade text,
+    entidade_id text,
+    acao text,
+    usuario text,
+    dados jsonb default '{}'::jsonb,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create or replace function alpes_set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+    new.updated_at = now();
+    return new;
+end;
+$$;
+
+do $$
+declare
+    tabela text;
+begin
+    foreach tabela in array array[
+        'produtos',
+        'movimentacoes',
+        'usuarios',
+        'fornecedores',
+        'clientes',
+        'categorias',
+        'unidades',
+        'controle_faltas',
+        'frotas_veiculos',
+        'frotas_abastecimentos',
+        'frotas_manutencoes',
+        'frotas_documentos',
+        'frotas_entregas',
+        'frotas_vistorias',
+        'bases_movimentacoes',
+        'bases_transferencias',
+        'configuracoes',
+        'logs',
+        'compras',
+        'relatorios',
+        'historicos'
+    ]
+    loop
+        execute format('drop trigger if exists set_updated_at on %I', tabela);
+        execute format(
+            'create trigger set_updated_at before update on %I for each row execute function alpes_set_updated_at()',
+            tabela
+        );
+    end loop;
+end $$;
+
 insert into storage.buckets (id, name, public)
 values ('imagens-produtos', 'imagens-produtos', true)
 on conflict (id) do update set public = true;

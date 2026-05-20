@@ -181,6 +181,7 @@ SUPABASE_ARQUIVO_TABELA = {
 
 SUPABASE_JSON_TABELA = {
     "usuarios.json": {"tabela": "usuarios", "chave": "nome"},
+    "auditoria.json": {"tabela": "logs", "chave": ""},
     "categorias.json": {"tabela": "categorias", "chave": "nome"},
     "unidades.json": {"tabela": "unidades", "chave": "nome"},
 }
@@ -317,6 +318,127 @@ def supabase_salvar_json(caminho, dados):
     except Exception as erro:
         supabase_guardar_erro(erro)
     return False
+
+
+def supabase_tabela_tem_dados(tabela):
+    client = obter_supabase_client()
+    if not client or not tabela:
+        return False
+    try:
+        resposta = client.table(tabela).select("id").limit(1).execute()
+        return bool(getattr(resposta, "data", None))
+    except Exception as erro:
+        supabase_guardar_erro(erro)
+        return False
+
+
+def supabase_configuracoes_tem_dados():
+    client = obter_supabase_client()
+    if not client:
+        return False
+    try:
+        resposta = client.table("configuracoes").select("chave").limit(1).execute()
+        return bool(getattr(resposta, "data", None))
+    except Exception as erro:
+        supabase_guardar_erro(erro)
+        return False
+
+
+def migrar_arquivo_dataframe_para_supabase(nome_arquivo, caminho, colunas):
+    client = obter_supabase_client()
+    cfg = SUPABASE_ARQUIVO_TABELA.get(nome_arquivo)
+    if not client or not cfg or not os.path.exists(caminho):
+        return False
+    if supabase_tabela_tem_dados(cfg["tabela"]):
+        return False
+    try:
+        df_migracao = pd.read_excel(caminho)
+        if df_migracao.empty:
+            return False
+        for coluna in colunas:
+            if coluna not in df_migracao.columns:
+                df_migracao[coluna] = ""
+        return supabase_salvar_dataframe(caminho, df_migracao[colunas])
+    except Exception as erro:
+        supabase_guardar_erro(erro)
+        return False
+
+
+def migrar_arquivo_json_para_supabase(nome_arquivo, caminho):
+    client = obter_supabase_client()
+    cfg = SUPABASE_JSON_TABELA.get(nome_arquivo)
+    if not client or not cfg or not os.path.exists(caminho):
+        return False
+    if supabase_tabela_tem_dados(cfg["tabela"]):
+        return False
+    try:
+        with open(caminho, "r", encoding="utf-8") as arquivo:
+            dados = json.load(arquivo)
+        if not dados:
+            return False
+        return supabase_salvar_json(caminho, dados)
+    except Exception as erro:
+        supabase_guardar_erro(erro)
+        return False
+
+
+def migrar_configuracoes_para_supabase():
+    caminho = os.path.join(DATA_DIR, "configuracoes.json")
+    if not supabase_configurado() or not os.path.exists(caminho):
+        return False
+    if supabase_configuracoes_tem_dados():
+        return False
+    try:
+        with open(caminho, "r", encoding="utf-8") as arquivo:
+            dados = json.load(arquivo)
+        if not isinstance(dados, dict) or not dados:
+            return False
+        return supabase_salvar_json(caminho, dados)
+    except Exception as erro:
+        supabase_guardar_erro(erro)
+        return False
+
+
+def migrar_pastas_storage_para_supabase():
+    if not supabase_configurado():
+        return 0
+    enviados = 0
+    for pasta in pastas_permitidas_backup():
+        pasta_abs = os.path.join(DATA_DIR, pasta)
+        if not os.path.isdir(pasta_abs):
+            continue
+        for raiz, _, arquivos in os.walk(pasta_abs):
+            for nome in arquivos:
+                caminho_arquivo = os.path.join(raiz, nome)
+                if upload_arquivo_remoto(caminho_arquivo):
+                    enviados += 1
+    return enviados
+
+
+def migrar_dados_existentes_para_supabase():
+    if not supabase_configurado() or st.session_state.get("migracao_supabase_executada"):
+        return
+    st.session_state["migracao_supabase_executada"] = True
+    migrados = []
+    try:
+        for nome_arquivo, cfg in SUPABASE_ARQUIVO_TABELA.items():
+            caminho = os.path.join(DATA_DIR, nome_arquivo)
+            if migrar_arquivo_dataframe_para_supabase(nome_arquivo, caminho, cfg["colunas"]):
+                migrados.append(nome_arquivo)
+        for nome_arquivo in SUPABASE_JSON_TABELA:
+            caminho = os.path.join(DATA_DIR, nome_arquivo)
+            if migrar_arquivo_json_para_supabase(nome_arquivo, caminho):
+                migrados.append(nome_arquivo)
+        if migrar_configuracoes_para_supabase():
+            migrados.append("configuracoes.json")
+        total_storage = migrar_pastas_storage_para_supabase()
+        if migrados or total_storage:
+            st.session_state["migracao_supabase_resumo"] = (
+                f"Migração Supabase concluída: {len(migrados)} arquivo(s) de dados e "
+                f"{total_storage} arquivo(s) de storage enviados."
+            )
+    except Exception as erro:
+        st.session_state["ultimo_erro_supabase"] = str(erro)[:700]
 
 
 def supabase_upload_imagem_produto(arquivo, nome_arquivo):
@@ -775,6 +897,7 @@ LOGIN_LOGO_IMAGE = os.path.join(PASTA_IMAGENS_SISTEMA, "logo_alpes_horizontal_ne
 HOME_IMAGE_FALLBACK = os.path.join(BASE_DIR, "Desktop 1.jpg")
 BASES_FREQUENCIA = ["TMG BASE SORRISO", "TMG BASE RONDONOPOLIS"]
 sincronizar_armazenamento_inicio()
+migrar_dados_existentes_para_supabase()
 
 
 # =========================
@@ -847,6 +970,7 @@ def registrar_auditoria(acao, modulo="", detalhe="", registro="", antes=None, de
     historico = historico[-5000:]
     with open(AUDITORIA_JSON, "w", encoding="utf-8") as arquivo:
         json.dump(historico, arquivo, ensure_ascii=False, indent=4)
+    supabase_salvar_json(AUDITORIA_JSON, historico)
     upload_arquivo_remoto(AUDITORIA_JSON)
 
 

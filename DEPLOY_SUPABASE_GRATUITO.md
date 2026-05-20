@@ -1,82 +1,83 @@
-# Deploy gratuito com Streamlit Cloud + Supabase
+# Deploy com Streamlit Cloud + Supabase
 
-Este sistema está preparado para usar o Supabase Free como armazenamento online persistente.
+Este sistema usa Supabase como armazenamento persistente profissional para o ambiente online.
+
+No Streamlit Cloud, o disco local e temporario. Por isso, cadastros feitos online so ficam seguros quando o Supabase esta configurado.
 
 ## 1. Criar projeto no Supabase
 
 1. Acesse https://supabase.com.
-2. Crie uma conta ou entre com GitHub/Google.
-3. Crie um novo projeto.
-4. Aguarde o projeto terminar de provisionar.
+2. Crie um projeto.
+3. Aguarde o provisionamento finalizar.
 
-## 2. Criar bucket de arquivos
+## 2. Criar tabelas e buckets
 
-1. No Supabase, vá em **Storage**.
-2. Clique em **New bucket**.
-3. Nome do bucket:
+1. No Supabase, abra **SQL Editor**.
+2. Copie todo o conteudo de `supabase_schema.sql`.
+3. Execute o script.
 
-```text
-alpes-system
-```
+O script cria as tabelas operacionais, gatilhos de `updated_at` e os buckets:
 
-4. Pode deixar como bucket privado.
-5. Clique em **Create bucket**.
+- `imagens-produtos`
+- `alpes-system`
 
-## 3. Pegar as chaves
+## 3. Configurar Streamlit Secrets
 
-No Supabase, vá em **Project Settings** > **API**.
+No Supabase, abra **Project Settings > API** e copie:
 
-Copie:
+- `Project URL`
+- `service_role key`
 
-```text
-Project URL
-service_role key
-```
-
-Use a `service_role key` apenas no Streamlit Secrets. Nao coloque essa chave no GitHub.
-
-## 4. Configurar Streamlit Secrets
-
-No Streamlit Cloud:
-
-1. Abra o app.
-2. Clique em **Settings**.
-3. Abra **Secrets**.
-4. Adicione:
+No Streamlit Cloud, abra **Settings > Secrets** e adicione:
 
 ```toml
 SUPABASE_URL = "COLE_AQUI_PROJECT_URL"
 SUPABASE_SERVICE_ROLE_KEY = "COLE_AQUI_SERVICE_ROLE_KEY"
 SUPABASE_BUCKET = "alpes-system"
+ALPES_EXIGIR_ARMAZENAMENTO_ONLINE = "true"
 ```
 
-5. Clique em **Save changes**.
-6. Clique em **Reboot app**.
+Depois clique em **Save changes** e **Reboot app**.
 
-## 5. Como o sistema salva os dados
+## 4. Migração automática
 
-Quando Supabase estiver configurado:
+Na primeira inicializacao com Supabase configurado, o sistema verifica os arquivos antigos:
 
-- arquivos `.xlsx` sao enviados automaticamente para o bucket;
-- arquivos `.json` sao enviados automaticamente para o bucket;
-- imagens de produtos vao para `Imagens Produtos`;
-- anexos de frotas vao para `Anexos Frotas`;
-- anexos de orcamentos vao para `Anexos Orcamentos`;
-- ao iniciar, o sistema baixa os arquivos do bucket para a memoria local do app.
+- `.xlsx`
+- `.json`
+- imagens
+- anexos
 
-Se Supabase nao estiver configurado, o sistema ainda tenta usar Google Drive, caso esteja configurado.
+Se uma tabela estiver vazia, o sistema migra os dados locais existentes para o PostgreSQL.
 
-## 6. Proxima etapa recomendada
+Se a tabela ja tiver dados, o sistema nao duplica registros.
 
-Este ajuste resolve armazenamento persistente gratuito.
+Os arquivos antigos continuam na pasta como copia historica. Eles nao sao apagados.
 
-Para multiplos usuarios com mais seguranca, a evolucao ideal e migrar aos poucos os arquivos `.xlsx` para tabelas PostgreSQL no Supabase:
+## 5. Fonte principal dos dados
 
-1. produtos;
-2. movimentacoes;
-3. usuarios;
-4. frotas;
-5. frequencia;
-6. relatorios.
+Com Supabase configurado:
 
-Essa migracao deve ser feita por partes para nao perder dados ja armazenados.
+- leituras de tabelas usam PostgreSQL primeiro;
+- salvamentos gravam no PostgreSQL;
+- imagens e anexos sobem para o Supabase Storage;
+- logs de auditoria tambem sao enviados ao banco;
+- o app bloqueia gravacoes online se nao houver armazenamento persistente configurado.
+
+## 6. Backup
+
+O backup principal passa a ser o banco PostgreSQL do Supabase.
+
+Para exportar dados manualmente:
+
+1. No Supabase, abra **Table Editor**.
+2. Escolha a tabela.
+3. Use **Export data** para CSV.
+
+Para uma rotina profissional, configure tambem backups/snapshots no painel do Supabase conforme o plano contratado.
+
+## 7. Observacao importante
+
+Nunca coloque `SUPABASE_SERVICE_ROLE_KEY` no GitHub.
+
+Essa chave deve ficar apenas nos Secrets do Streamlit Cloud ou em variaveis de ambiente do servidor.
