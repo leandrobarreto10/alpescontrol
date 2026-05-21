@@ -1,5 +1,6 @@
 import os
 import sys
+from urllib.parse import urlparse
 
 
 REQUIRED_PRODUCTION_VARS = [
@@ -26,8 +27,19 @@ def main():
             print(f"- {name}")
         return 1
 
-    if os.environ.get("ALPES_ADMIN_PASSWORD") == "123":
-        print("ALPES_ADMIN_PASSWORD nao pode ser 123 em production.")
+    supabase_url = os.environ.get("SUPABASE_URL", "").strip()
+    parsed_url = urlparse(supabase_url)
+    if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
+        print("SUPABASE_URL invalida. Use o formato https://SEU-PROJETO.supabase.co")
+        return 1
+
+    if not os.environ.get("SUPABASE_BUCKET", "").strip():
+        print("SUPABASE_BUCKET nao pode ficar vazio.")
+        return 1
+
+    admin_password = os.environ.get("ALPES_ADMIN_PASSWORD", "")
+    if admin_password == "123" or len(admin_password) < 8:
+        print("ALPES_ADMIN_PASSWORD deve ser forte e nao pode ser 123.")
         return 1
 
     print("Variaveis de production validadas.")

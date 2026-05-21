@@ -1,5 +1,5 @@
 -- Execute este script no SQL Editor do Supabase.
--- Depois crie/valide o bucket publico "imagens-produtos" em Storage.
+-- O script cria/valida as tabelas e os buckets "imagens-produtos" e "alpes-system".
 
 create table if not exists produtos (
     id text primary key,

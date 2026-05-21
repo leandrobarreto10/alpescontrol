@@ -9,3 +9,7 @@ backups/
 .git/
 .streamlit/secrets.toml
 *.log
+*credential*
+*credentials*
+*credencial*
+*credenciais*
