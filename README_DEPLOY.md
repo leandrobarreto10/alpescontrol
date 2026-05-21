@@ -7,6 +7,7 @@ Configure no Streamlit Cloud, Railway, Render ou servidor:
 ```toml
 ENVIRONMENT = "production"
 SUPABASE_URL = "..."
+SUPABASE_ANON_KEY = "..."
 SUPABASE_SERVICE_ROLE_KEY = "..."
 SUPABASE_BUCKET = "alpes-system"
 ALPES_EXIGIR_ARMAZENAMENTO_ONLINE = "true"
@@ -16,6 +17,12 @@ ALPES_ADMIN_PASSWORD = "..."
 ```
 
 Em producao, o sistema nao opera sem Supabase.
+
+Para instrucoes especificas:
+
+- Streamlit Cloud: `STREAMLIT_DEPLOY.md`
+- Railway: `RAILWAY_DEPLOY.md`
+- Supabase: `SUPABASE_PRODUCTION.md`
 
 ## Banco de dados
 

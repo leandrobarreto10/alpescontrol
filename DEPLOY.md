@@ -1,67 +1,50 @@
-# Deploy Do Sistema Alpes
+# Deploy do Sistema Alpes
 
-Este projeto esta preparado para rodar em um servidor Python com Streamlit.
+O sistema está preparado para produção online usando Supabase/PostgreSQL e Supabase Storage.
 
-## Arquivos principais
+## Fonte oficial de dados
 
-- `app.py`: sistema principal.
-- `requirements.txt`: dependencias Python.
-- `.streamlit/config.toml`: configuracao de servidor e tema.
-- `run_producao.bat`: execucao local/Windows.
-- `Dockerfile` e `docker-compose.yml`: execucao em VPS com Docker.
-- `ALPES_DATA_DIR`: variavel opcional para definir onde ficam planilhas, JSON, imagens e anexos.
+Em produção:
 
-## Rodar em servidor Windows
+- dados operacionais ficam no Supabase/PostgreSQL;
+- imagens e anexos ficam no Supabase Storage;
+- arquivos locais não são banco de dados;
+- se o Supabase não estiver configurado, o app bloqueia a operação.
 
-1. Instalar Python 3.12.
-2. Abrir o PowerShell na pasta do sistema.
-3. Executar:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\activate
-python -m pip install -r requirements.txt
-streamlit run app.py --server.address 0.0.0.0 --server.port 8502 --server.fileWatcherType poll
-```
-
-Depois acessar:
+Mensagem esperada:
 
 ```text
-http://IP_DO_SERVIDOR:8502
+Erro crítico: Supabase não configurado. O sistema não pode operar em produção sem banco de dados.
 ```
 
-## Rodar em VPS Linux com Docker
+## Documentos de deploy
 
-1. Instalar Docker e Docker Compose.
-2. Enviar a pasta do sistema para o servidor.
-3. Dentro da pasta, executar:
+- `STREAMLIT_DEPLOY.md`: deploy no Streamlit Cloud.
+- `RAILWAY_DEPLOY.md`: deploy no Railway.
+- `SUPABASE_PRODUCTION.md`: configuração de banco, Storage e backups.
+- `README_DEPLOY.md`: visão geral de produção.
 
-```bash
-docker compose up -d --build
-```
+## Variáveis obrigatórias
 
-Depois acessar:
+Consulte `.env.example`.
+
+Principais variáveis:
 
 ```text
-http://IP_DO_SERVIDOR:8502
+ENVIRONMENT=production
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_BUCKET=alpes-system
+ALPES_EXIGIR_ARMAZENAMENTO_ONLINE=true
+ALPES_ADMIN_USER=
+ALPES_ADMIN_EMAIL=
+ALPES_ADMIN_PASSWORD=
 ```
 
-No Docker, os dados ficam na pasta `dados` do projeto. Isso permite atualizar o codigo sem apagar planilhas, usuarios, imagens, anexos e configuracoes.
+## Domínios sugeridos
 
-## Publicacao com dominio
+- Produção: `app.sistemaalpes.com.br`
+- Teste: `teste.sistemaalpes.com.br`
 
-Para usar dominio com HTTPS, coloque um proxy reverso na frente do Streamlit, como Nginx, Apache ou o painel do provedor. O proxy deve apontar para:
-
-```text
-http://127.0.0.1:8502
-```
-
-## Observacao importante sobre acesso simultaneo
-
-Hoje os dados ainda ficam em arquivos `.xlsx` e `.json`. Isso funciona para uso simples, mas nao e o ideal para muitos usuarios ao mesmo tempo.
-
-Para producao com varios usuarios, o proximo passo recomendado e migrar os dados para PostgreSQL. Assim o sistema ganha mais seguranca, historico consistente, backups melhores e menor risco de conflito entre usuarios.
-
-## Backup
-
-O sistema ja possui rotina de backup na aba `CONFIGURACOES`. Antes de publicar, gere um backup completo.
+Use ambientes Supabase separados para teste e produção.

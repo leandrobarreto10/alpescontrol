@@ -46,12 +46,14 @@ Adicione:
 
 ```toml
 SUPABASE_URL = "https://SEU-PROJETO.supabase.co"
+SUPABASE_ANON_KEY = "SUA_ANON_KEY"
 SUPABASE_KEY = "SUA_CHAVE_DO_SUPABASE"
 ```
 
 Também funciona usando variáveis de ambiente com os mesmos nomes:
 
 - `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
 - `SUPABASE_KEY`
 
 ## 4. Como Testar

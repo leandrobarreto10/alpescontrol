@@ -7586,7 +7586,7 @@ elif menu == "CONFIGURAÇÕES":
                 )
                 if not usuario_encontrado:
                     st.error("Usuário logado não encontrado.")
-                elif usuario_encontrado.get("senha") != hash_senha(senha_atual):
+                elif not verificar_senha(senha_atual, usuario_encontrado.get("senha")):
                     st.error("Senha atual incorreta.")
                 elif not nova_senha:
                     st.error("Informe a nova senha.")

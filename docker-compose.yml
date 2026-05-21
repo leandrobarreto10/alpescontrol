@@ -4,9 +4,9 @@ services:
     container_name: alpes-sistema
     restart: unless-stopped
     ports:
-      - "8502:8502"
+      - "8501:8501"
+    env_file:
+      - .env
     environment:
-      - ALPES_DATA_DIR=/app/dados
-    volumes:
-      - ./dados:/app/dados
-      - ./backups:/app/backups
+      - PORT=8501
+      - ENVIRONMENT=production
