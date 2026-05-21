@@ -25,6 +25,10 @@ Não coloque chaves reais no GitHub. Use somente Secrets/Variables do provedor.
 7. Vá em **Storage** e confirme os buckets:
    - `alpes-system`
    - `imagens-produtos`
+   - `anexos-frotas`
+   - `documentos`
+   - `uploads`
+   - `imagens-sistema`
 8. Vá em **Project Settings > API**.
 9. Copie:
    - `SUPABASE_URL`
@@ -162,6 +166,7 @@ Antes de liberar para uso real, marque todos os itens:
 - [ ] `supabase_schema.sql` executado no ambiente correto.
 - [ ] Bucket `alpes-system` criado.
 - [ ] Bucket `imagens-produtos` criado.
+- [ ] Buckets privados `anexos-frotas`, `documentos`, `uploads` e `imagens-sistema` criados.
 - [ ] `SUPABASE_URL` configurada.
 - [ ] `SUPABASE_ANON_KEY` configurada.
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` configurada em Secrets/Variables.

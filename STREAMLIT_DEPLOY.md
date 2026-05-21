@@ -8,6 +8,10 @@
 4. Confirme os buckets:
    - `alpes-system`
    - `imagens-produtos`
+   - `anexos-frotas`
+   - `documentos`
+   - `uploads`
+   - `imagens-sistema`
 
 ## 2. Configurar Secrets
 

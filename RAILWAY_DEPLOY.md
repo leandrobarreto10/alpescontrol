@@ -36,7 +36,7 @@ Não configure `ALPES_DATA_DIR` em produção. O banco oficial é o Supabase.
 Antes do primeiro acesso:
 
 1. Execute `supabase_schema.sql` no SQL Editor.
-2. Confirme os buckets `alpes-system` e `imagens-produtos`.
+2. Confirme os buckets `alpes-system`, `imagens-produtos`, `anexos-frotas`, `documentos`, `uploads` e `imagens-sistema`.
 
 ## 4. Domínio próprio
 

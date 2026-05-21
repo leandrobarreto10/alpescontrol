@@ -42,6 +42,8 @@ O bucket `alpes-system` guarda anexos, documentos, comprovantes e imagens intern
 
 O bucket `imagens-produtos` guarda imagens publicas de produtos.
 
+Os buckets privados `anexos-frotas`, `documentos`, `uploads` e `imagens-sistema` tambem sao criados pelo schema para separar arquivos por finalidade quando necessario.
+
 ## Backups
 
 Ative os backups/snapshots no painel do Supabase conforme o plano contratado.

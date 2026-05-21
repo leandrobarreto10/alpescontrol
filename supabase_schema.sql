@@ -1,5 +1,5 @@
 -- Execute este script no SQL Editor do Supabase.
--- O script cria/valida as tabelas e os buckets "imagens-produtos" e "alpes-system".
+-- O script cria/valida as tabelas e os buckets de Storage usados em producao.
 
 create table if not exists produtos (
     id text primary key,
@@ -449,6 +449,14 @@ insert into storage.buckets (id, name, public)
 values ('alpes-system', 'alpes-system', false)
 on conflict (id) do update set public = false;
 
+insert into storage.buckets (id, name, public)
+values
+    ('anexos-frotas', 'anexos-frotas', false),
+    ('documentos', 'documentos', false),
+    ('uploads', 'uploads', false),
+    ('imagens-sistema', 'imagens-sistema', false)
+on conflict (id) do update set public = false;
+
 drop policy if exists "Leitura publica imagens produtos" on storage.objects;
 create policy "Leitura publica imagens produtos"
 on storage.objects for select
@@ -464,3 +472,24 @@ create policy "Atualizar imagens produtos autenticado"
 on storage.objects for update
 using (bucket_id = 'imagens-produtos')
 with check (bucket_id = 'imagens-produtos');
+
+drop policy if exists "Leitura privada buckets alpes" on storage.objects;
+create policy "Leitura privada buckets alpes"
+on storage.objects for select
+using (bucket_id in ('alpes-system', 'anexos-frotas', 'documentos', 'uploads', 'imagens-sistema'));
+
+drop policy if exists "Upload privado buckets alpes" on storage.objects;
+create policy "Upload privado buckets alpes"
+on storage.objects for insert
+with check (bucket_id in ('alpes-system', 'anexos-frotas', 'documentos', 'uploads', 'imagens-sistema'));
+
+drop policy if exists "Atualizar privado buckets alpes" on storage.objects;
+create policy "Atualizar privado buckets alpes"
+on storage.objects for update
+using (bucket_id in ('alpes-system', 'anexos-frotas', 'documentos', 'uploads', 'imagens-sistema'))
+with check (bucket_id in ('alpes-system', 'anexos-frotas', 'documentos', 'uploads', 'imagens-sistema'));
+
+drop policy if exists "Excluir privado buckets alpes" on storage.objects;
+create policy "Excluir privado buckets alpes"
+on storage.objects for delete
+using (bucket_id in ('alpes-system', 'anexos-frotas', 'documentos', 'uploads', 'imagens-sistema'));

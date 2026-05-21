@@ -17,6 +17,10 @@ O script cria:
 Buckets esperados:
 
 - `alpes-system`: privado, usado para anexos, documentos, comprovantes e arquivos internos.
+- `anexos-frotas`: privado, usado para anexos operacionais da frota.
+- `documentos`: privado, usado para documentos administrativos.
+- `uploads`: privado, usado para arquivos enviados pelo usuario.
+- `imagens-sistema`: privado, usado para imagens internas do sistema.
 - `imagens-produtos`: público, usado para imagens de produtos.
 
 ## Chaves
