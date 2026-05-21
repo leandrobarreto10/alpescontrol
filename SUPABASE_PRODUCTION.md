@@ -9,6 +9,7 @@ O script cria:
 - tabelas operacionais;
 - tabela `logs_sistema`;
 - tabela `migracoes_sistema`;
+- índices operacionais;
 - buckets de Storage;
 - trigger de `updated_at`.
 

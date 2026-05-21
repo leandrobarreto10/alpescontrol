@@ -390,6 +390,32 @@ begin
     end loop;
 end $$;
 
+create index if not exists idx_produtos_status on produtos (status);
+create index if not exists idx_produtos_codigo on produtos (codigo);
+create index if not exists idx_produtos_categoria on produtos (categoria);
+create index if not exists idx_movimentacoes_produto on movimentacoes (produto);
+create index if not exists idx_movimentacoes_tipo on movimentacoes (tipo);
+create index if not exists idx_movimentacoes_data on movimentacoes (data);
+create index if not exists idx_usuarios_usuario on usuarios (usuario);
+create index if not exists idx_usuarios_email on usuarios (email);
+create index if not exists idx_usuarios_nivel on usuarios (nivel);
+create index if not exists idx_fornecedores_status on fornecedores (status);
+create index if not exists idx_clientes_status on clientes (status);
+create index if not exists idx_controle_faltas_data on controle_faltas (data);
+create index if not exists idx_controle_faltas_base on controle_faltas (base);
+create index if not exists idx_frotas_veiculos_placa on frotas_veiculos (placa);
+create index if not exists idx_frotas_veiculos_status on frotas_veiculos (status);
+create index if not exists idx_frotas_abastecimentos_placa on frotas_abastecimentos (placa);
+create index if not exists idx_frotas_abastecimentos_data on frotas_abastecimentos (data);
+create index if not exists idx_frotas_manutencoes_placa on frotas_manutencoes (placa);
+create index if not exists idx_frotas_manutencoes_data on frotas_manutencoes (data);
+create index if not exists idx_frotas_documentos_placa on frotas_documentos (placa);
+create index if not exists idx_frotas_documentos_vencimento on frotas_documentos (vencimento);
+create index if not exists idx_logs_sistema_data_hora on logs_sistema (data_hora);
+create index if not exists idx_logs_sistema_modulo on logs_sistema (modulo);
+create index if not exists idx_historicos_data_hora on historicos (data_hora);
+create index if not exists idx_historicos_modulo on historicos (modulo);
+
 create or replace function alpes_set_updated_at()
 returns trigger
 language plpgsql

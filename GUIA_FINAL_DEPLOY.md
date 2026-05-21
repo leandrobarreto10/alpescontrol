@@ -11,6 +11,7 @@ Não coloque chaves reais no GitHub. Use somente Secrets/Variables do provedor.
 3. Abra o projeto desejado.
 4. Vá em **SQL Editor**.
 5. Copie e execute todo o arquivo `supabase_schema.sql`.
+   - O script é idempotente e pode ser executado novamente para validar tabelas, índices, triggers, políticas e buckets.
 6. Confirme no **Table Editor** se as tabelas foram criadas, incluindo:
    - `usuarios`
    - `produtos`
