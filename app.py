@@ -966,6 +966,8 @@ def upload_arquivo_remoto(caminho_local):
 
 
 def sincronizar_armazenamento_inicio():
+    if ambiente_producao():
+        return
     if supabase_configurado():
         sincronizar_supabase_inicio()
     elif not ambiente_producao():
@@ -995,6 +997,7 @@ def dataframe_to_excel_com_armazenamento(self, excel_writer, *args, **kwargs):
                 erro = st.session_state.get("ultimo_erro_supabase", "")
                 st.error(f"Erro ao salvar no Supabase. Nenhum dado foi gravado localmente. {erro}")
                 st.stop()
+            limpar_cache_dados()
             if "registrar_auditoria" in globals():
                 registrar_auditoria("SALVAR_BANCO", "DADOS", os.path.basename(caminho_excel), os.path.basename(caminho_excel))
             return None
@@ -1005,6 +1008,7 @@ def dataframe_to_excel_com_armazenamento(self, excel_writer, *args, **kwargs):
             try:
                 supabase_salvar_dataframe(caminho_excel, self)
                 upload_arquivo_remoto(caminho_excel)
+                limpar_cache_dados()
             except Exception as erro:
                 st.session_state["ultimo_erro_armazenamento"] = str(erro)[:1200]
             if "marcar_backup_pendente" in globals():
@@ -1020,6 +1024,8 @@ pd.DataFrame.to_excel = dataframe_to_excel_com_armazenamento
 def caminho_dados(nome):
     destino = os.path.join(DATA_DIR, nome)
     origem = os.path.join(BASE_DIR, nome)
+    if ambiente_producao():
+        return destino
     if DATA_DIR != BASE_DIR and not os.path.exists(destino) and os.path.exists(origem):
         os.makedirs(os.path.dirname(destino), exist_ok=True)
         if os.path.isdir(origem):
@@ -1086,10 +1092,12 @@ def salvar_json(caminho, dados):
             erro = st.session_state.get("ultimo_erro_supabase", "")
             st.error(f"Erro ao salvar no Supabase. Nenhum dado foi gravado localmente. {erro}")
             st.stop()
+        limpar_cache_dados()
         return
     with open(caminho, "w", encoding="utf-8") as arquivo:
         json.dump(dados, arquivo, ensure_ascii=False, indent=4)
     supabase_salvar_json(caminho, dados)
+    limpar_cache_dados()
     upload_arquivo_remoto(caminho)
     marcar_backup_pendente(caminho)
 
@@ -1116,6 +1124,13 @@ def carregar_dataframe(caminho, colunas):
         except Exception as erro:
             registrar_erro_leitura(caminho, erro)
     return pd.DataFrame(columns=colunas)
+
+
+def limpar_cache_dados():
+    try:
+        st.cache_data.clear()
+    except Exception:
+        pass
 
 
 def registrar_auditoria(acao, modulo="", detalhe="", registro="", antes=None, depois=None):
@@ -1258,6 +1273,8 @@ def arquivo_raiz_permitido_backup(nome):
 
 
 def gerar_backup_incremental(caminho_alterado):
+    if ambiente_producao():
+        return ""
     caminho_origem = os.path.abspath(os.fspath(caminho_alterado or ""))
     data_dir_abs = os.path.abspath(DATA_DIR)
     if not caminho_origem or not os.path.exists(caminho_origem):
@@ -1289,6 +1306,9 @@ def gerar_backup_incremental(caminho_alterado):
 
 
 def restaurar_backup_zip(caminho_zip):
+    if ambiente_producao():
+        st.error("Restauração por arquivo local não é permitida em produção. Use restauração controlada no Supabase.")
+        st.stop()
     ignorar_pastas_restore = {"backups", "__pycache__", ".git", ".venv", "venv"}
     with zipfile.ZipFile(caminho_zip, "r") as zip_ref:
         for nome in zip_ref.namelist():
@@ -1356,6 +1376,8 @@ def marcar_backup_pendente(caminho=""):
 
 
 def garantir_pasta_imagens_sistema():
+    if ambiente_producao():
+        return
     os.makedirs(PASTA_IMAGENS, exist_ok=True)
     os.makedirs(PASTA_IMAGENS_SISTEMA, exist_ok=True)
     os.makedirs(PASTA_ANEXOS_FROTAS, exist_ok=True)
@@ -2802,6 +2824,7 @@ if not st.session_state["autenticado"]:
                 None
             )
             if usuario_encontrado and usuario_encontrado.get("status", "Ativo") == "Inativo":
+                registrar_auditoria("LOGIN_BLOQUEADO", "AUTENTICAÇÃO", "Usuário inativo tentou acessar", usuario_login)
                 st.error("Usuário inativo. Fale com o administrador.")
             elif usuario_encontrado and verificar_senha(senha_login, usuario_encontrado.get("senha")):
                 if not str(usuario_encontrado.get("senha", "")).startswith("pbkdf2_sha256$"):
@@ -2826,8 +2849,10 @@ if not st.session_state["autenticado"]:
                     st.session_state["login_salvo_usuario"] = ""
                     st.session_state["login_salvo_ativo"] = False
                     st.session_state.pop("login_salvo_modo", None)
+                registrar_auditoria("LOGIN", "AUTENTICAÇÃO", "Login realizado com sucesso", usuario_encontrado.get("nome", ""))
                 st.rerun()
             else:
+                registrar_auditoria("LOGIN_INVALIDO", "AUTENTICAÇÃO", "Tentativa de login inválida", usuario_login)
                 st.error("Login inválido. Verifique usuário/email e senha.")
         st.markdown(
             """
@@ -2858,14 +2883,94 @@ COLUNAS_FROTAS_VISTORIAS = ["data", "placa", "tipo_vistoria", "responsavel", "km
 COLUNAS_BASES_MOVIMENTACOES = ["data", "base", "produto", "tipo", "quantidade", "responsavel", "origem_destino", "observacoes"]
 COLUNAS_BASES_TRANSFERENCIAS = ["data", "produto", "quantidade", "origem", "destino", "responsavel_envio", "responsavel_recebimento", "status", "observacoes"]
 
-df_produtos = carregar_dataframe(PRODUTOS_XLSX, COLUNAS_PRODUTOS)
-df_mov = carregar_dataframe(MOVIMENTACOES_XLSX, COLUNAS_MOVIMENTACOES)
-df_clientes = carregar_dataframe(CLIENTES_XLSX, COLUNAS_CLIENTES)
-df_fornecedores = carregar_dataframe(FORNECEDORES_XLSX, COLUNAS_FORNECEDORES)
+def buscar_produtos():
+    return carregar_dataframe(PRODUTOS_XLSX, COLUNAS_PRODUTOS)
+
+
+def salvar_produto(dados):
+    dados.to_excel(PRODUTOS_XLSX, index=False)
+
+
+def atualizar_produto(dados):
+    salvar_produto(dados)
+
+
+def buscar_movimentacoes():
+    return carregar_dataframe(MOVIMENTACOES_XLSX, COLUNAS_MOVIMENTACOES)
+
+
+def salvar_movimentacao(dados):
+    dados.to_excel(MOVIMENTACOES_XLSX, index=False)
+
+
+def buscar_clientes():
+    return carregar_dataframe(CLIENTES_XLSX, COLUNAS_CLIENTES)
+
+
+def salvar_cliente(dados):
+    dados.to_excel(CLIENTES_XLSX, index=False)
+
+
+def buscar_fornecedores():
+    return carregar_dataframe(FORNECEDORES_XLSX, COLUNAS_FORNECEDORES)
+
+
+def salvar_fornecedor(dados):
+    dados.to_excel(FORNECEDORES_XLSX, index=False)
+
+
+def buscar_veiculos():
+    return carregar_dataframe(FROTAS_VEICULOS_XLSX, COLUNAS_FROTAS_VEICULOS)
+
+
+def salvar_veiculo(dados):
+    dados.to_excel(FROTAS_VEICULOS_XLSX, index=False)
+
+
+def buscar_abastecimentos():
+    return carregar_dataframe(FROTAS_ABASTECIMENTOS_XLSX, COLUNAS_FROTAS_ABASTECIMENTOS)
+
+
+def salvar_abastecimento(dados):
+    dados.to_excel(FROTAS_ABASTECIMENTOS_XLSX, index=False)
+
+
+def buscar_manutencoes_frota():
+    return carregar_dataframe(FROTAS_MANUTENCOES_XLSX, COLUNAS_FROTAS_MANUTENCOES)
+
+
+def salvar_manutencao_frota(dados):
+    dados.to_excel(FROTAS_MANUTENCOES_XLSX, index=False)
+
+
+def buscar_usuarios():
+    return carregar_json(USUARIOS_JSON, [])
+
+
+def salvar_usuario(dados):
+    salvar_json(USUARIOS_JSON, dados)
+
+
+def buscar_configuracoes():
+    return carregar_json(CONFIG_JSON, configuracao_padrao())
+
+
+def salvar_configuracao(dados):
+    salvar_json(CONFIG_JSON, dados)
+
+
+def registrar_log(acao, modulo="", detalhe="", registro="", antes=None, depois=None):
+    registrar_auditoria(acao, modulo, detalhe, registro, antes, depois)
+
+
+df_produtos = buscar_produtos()
+df_mov = buscar_movimentacoes()
+df_clientes = buscar_clientes()
+df_fornecedores = buscar_fornecedores()
 df_faltas = carregar_dataframe(CONTROLE_FALTAS_XLSX, COLUNAS_FALTAS)
-df_frotas_veiculos = carregar_dataframe(FROTAS_VEICULOS_XLSX, COLUNAS_FROTAS_VEICULOS)
-df_frotas_abastecimentos = carregar_dataframe(FROTAS_ABASTECIMENTOS_XLSX, COLUNAS_FROTAS_ABASTECIMENTOS)
-df_frotas_manutencoes = carregar_dataframe(FROTAS_MANUTENCOES_XLSX, COLUNAS_FROTAS_MANUTENCOES)
+df_frotas_veiculos = buscar_veiculos()
+df_frotas_abastecimentos = buscar_abastecimentos()
+df_frotas_manutencoes = buscar_manutencoes_frota()
 df_frotas_documentos = carregar_dataframe(FROTAS_DOCUMENTOS_XLSX, COLUNAS_FROTAS_DOCUMENTOS)
 df_frotas_entregas = carregar_dataframe(FROTAS_ENTREGAS_XLSX, COLUNAS_FROTAS_ENTREGAS)
 df_frotas_vistorias = carregar_dataframe(FROTAS_VISTORIAS_XLSX, COLUNAS_FROTAS_VISTORIAS)
@@ -3717,6 +3822,10 @@ def gerar_pdf_etiquetas(itens):
 
 
 def gerar_backup():
+    if ambiente_producao():
+        registrar_auditoria("EXPORTAR", "BACKUP", "Backup administrativo solicitado em produção", "backup_producao")
+        st.warning("Em produção, o backup oficial é o PostgreSQL/Supabase. Use as exportações administrativas ou snapshots do Supabase.")
+        return ""
     os.makedirs(BACKUP_DIR, exist_ok=True)
     nome = f"backup_estoque_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     pasta_temp = os.path.join(BACKUP_DIR, nome)
@@ -3762,6 +3871,7 @@ def solicitar_saida_com_backup():
 
 
 def concluir_saida():
+    registrar_auditoria("LOGOUT", "AUTENTICAÇÃO", "Logout realizado", st.session_state.get("usuario_logado", {}).get("nome", ""))
     st.session_state["autenticado"] = False
     st.session_state.pop("usuario_logado", None)
     st.session_state.pop("confirmar_saida_backup", None)
@@ -3849,6 +3959,7 @@ def salvar_anexo_frota(arquivo, placa, tipo_lancamento):
             erro = st.session_state.get("ultimo_erro_supabase", "")
             st.error(f"Erro ao enviar anexo para o Supabase Storage. {erro}")
             st.stop()
+        registrar_auditoria("UPLOAD", "STORAGE", "Anexo de frota enviado ao Supabase Storage", caminho_storage)
         return caminho_storage
     os.makedirs(PASTA_ANEXOS_FROTAS, exist_ok=True)
     caminho = os.path.join(PASTA_ANEXOS_FROTAS, os.path.basename(caminho_storage))
@@ -3856,6 +3967,7 @@ def salvar_anexo_frota(arquivo, placa, tipo_lancamento):
         destino.write(arquivo.getbuffer())
     upload_arquivo_remoto(caminho)
     marcar_backup_pendente(caminho)
+    registrar_auditoria("UPLOAD", "STORAGE", "Anexo de frota salvo", drive_relativo(caminho))
     return drive_relativo(caminho)
 
 
@@ -3892,6 +4004,7 @@ def salvar_imagem_produto(arquivo, codigo, produto):
             erro = st.session_state.get("ultimo_erro_supabase", "")
             st.error(f"Erro ao enviar imagem para o Supabase Storage. {erro}")
             st.stop()
+        registrar_auditoria("UPLOAD", "STORAGE", "Imagem de produto enviada ao Supabase Storage", nome_arquivo)
         return url_supabase
     os.makedirs(PASTA_IMAGENS, exist_ok=True)
     caminho = os.path.join(PASTA_IMAGENS, nome_arquivo)
