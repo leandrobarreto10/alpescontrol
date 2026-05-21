@@ -54,3 +54,4 @@ Arquivos, anexos e imagens: Supabase Storage.
 - backups locais: bloqueados para restauracao em producao; snapshots oficiais devem ser feitos pelo Supabase.
 - logs: gravados em `logs_sistema`.
 - migracao: registrada em `migracoes_sistema`.
+- multiusuario: registros sem chave natural usam ID estavel baseado no conteudo, evitando duplicacao por mudanca de ordem de linhas.

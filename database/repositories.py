@@ -22,7 +22,7 @@ def record_id(table, record, index=0, key=""):
     if key and str(record.get(key, "")).strip():
         return str(record.get(key)).strip()
     base = json.dumps(record, ensure_ascii=False, sort_keys=True, default=str)
-    return hashlib.sha256(f"{table}|{index}|{base}".encode("utf-8")).hexdigest()
+    return hashlib.sha256(f"{table}|{base}".encode("utf-8")).hexdigest()
 
 
 def fetch_dataframe(client, table, columns):

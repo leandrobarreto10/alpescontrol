@@ -208,7 +208,7 @@ def supabase_id_registro(tabela, registro, indice=0, chave=""):
     if tabela == "usuarios" and str(registro.get("email", "")).strip():
         return str(registro.get("email")).strip().lower()
     base = json.dumps(registro, ensure_ascii=False, sort_keys=True, default=str)
-    return hashlib.sha256(f"{tabela}|{indice}|{base}".encode("utf-8")).hexdigest()
+    return hashlib.sha256(f"{tabela}|{base}".encode("utf-8")).hexdigest()
 
 
 def supabase_ler_dataframe(caminho, colunas):
@@ -1331,6 +1331,11 @@ def restaurar_backup_zip(caminho_zip):
 
 def marcar_backup_pendente(caminho=""):
     if "config" not in globals():
+        return
+    if ambiente_producao():
+        config["alteracao_pendente_backup"] = False
+        config["ultima_alteracao"] = ""
+        salvar_config_sem_marcar_backup()
         return
     caminho_nome = os.path.basename(str(caminho or ""))
     if caminho_nome == os.path.basename(CONFIG_JSON) and st.session_state.get("salvando_backup"):
@@ -3863,6 +3868,9 @@ def gerar_backup():
 
 
 def solicitar_saida_com_backup():
+    if ambiente_producao():
+        concluir_saida()
+        return
     if config.get("alteracao_pendente_backup", False):
         st.session_state["confirmar_saida_backup"] = True
         st.rerun()
@@ -3914,6 +3922,8 @@ def tela_backup_obrigatorio_saida():
 
 
 def executar_backup_automatico_diario():
+    if ambiente_producao():
+        return
     if st.session_state.get("backup_automatico_verificado"):
         return
     st.session_state["backup_automatico_verificado"] = True
@@ -7941,11 +7951,15 @@ elif menu == "CONFIGURAÇÕES":
         else:
             st.success("Backup atualizado.")
         if st.button("Gerar backup"):
-            zip_path = gerar_backup()
-            st.success(f"Backup gerado: {zip_path}")
-            destino_drive = os.path.join(config.get("backup_google_drive_pasta", ""), os.path.basename(zip_path)) if config.get("backup_google_drive_pasta") else ""
-            if destino_drive and os.path.exists(destino_drive):
-                st.success(f"Cópia em nuvem criada: {destino_drive}")
+            if ambiente_producao():
+                registrar_auditoria("EXPORTAR", "BACKUP", "Backup local bloqueado em produção", "backup_local")
+                st.info("Em produção, o backup operacional deve ser feito por snapshots/exportações do Supabase.")
+            else:
+                zip_path = gerar_backup()
+                st.success(f"Backup gerado: {zip_path}")
+                destino_drive = os.path.join(config.get("backup_google_drive_pasta", ""), os.path.basename(zip_path)) if config.get("backup_google_drive_pasta") else ""
+                if destino_drive and os.path.exists(destino_drive):
+                    st.success(f"Cópia em nuvem criada: {destino_drive}")
 
         export_col1, export_col2 = st.columns(2)
         buffer_produtos = io.BytesIO()
@@ -7971,6 +7985,9 @@ elif menu == "CONFIGURAÇÕES":
         )
 
         if st.button("Sincronizar backup em nuvem", use_container_width=True):
+            if ambiente_producao():
+                st.warning("Restauração por ZIP/local não é permitida em produção. Use restauração controlada no Supabase.")
+                st.stop()
             zip_recente = backup_nuvem_mais_recente()
             if not zip_recente:
                 st.warning("Nenhum backup encontrado na pasta de nuvem.")
@@ -7991,6 +8008,9 @@ elif menu == "CONFIGURAÇÕES":
 
         backup_upload = st.file_uploader("Restaurar backup", type=["zip"])
         if backup_upload and st.button("Restaurar backup agora"):
+            if ambiente_producao():
+                st.warning("Restauração por ZIP/local não é permitida em produção. Use restauração controlada no Supabase.")
+                st.stop()
             restaurar_backup_zip(backup_upload)
             if os.path.exists(PRODUTOS_XLSX):
                 try:
